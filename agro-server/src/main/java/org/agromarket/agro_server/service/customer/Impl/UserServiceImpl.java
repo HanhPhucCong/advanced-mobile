@@ -55,7 +55,9 @@ public class UserServiceImpl implements UserService {
     currentUser.setPhoneNumber(profileRequest.getPhoneNumber());
     currentUser.setAddress(profileRequest.getAddress());
     currentUser.setDateOfBirth(profileRequest.getDateOfBirth());
-    currentUser.setAvatarUrl(profileRequest.getAvatarUrl());
+    if (profileRequest.getAvatarUrl() != null) {
+      currentUser.setAvatarUrl(profileRequest.getAvatarUrl());
+    }
     User updatedUser = userRepository.save(currentUser);
 
     UserResponse responseUser = userMapper.convertToResponse(updatedUser);

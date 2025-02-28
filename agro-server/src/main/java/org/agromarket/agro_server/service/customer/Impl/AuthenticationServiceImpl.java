@@ -107,6 +107,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     user.setEmail(signupRequest.getEmail());
     user.setRole(Role.CUSTOMER);
     user.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
+    user.setAvatarUrl(
+        "https://res.cloudinary.com/dftznqjsj/image/upload/v1729934084/round-account-button-with-user-inside_ehcrfp.png");
 
     String verifyCode = getVerifyCode();
     Verify verify = new Verify();

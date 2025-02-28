@@ -1,21 +1,18 @@
 import axiosClient from './axiosClient';
+
 const profileService = {
     getAllActive() {
         const url = '/api/user/my-profile';
         return axiosClient.get(url);
     },
-    async updateProfile(formData: FormData) {
-        try {
-            const response = await axiosClient.put('/api/user/update-profile', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            });
-            return { success: true, data: response };
-        } catch (error: any) {
-            console.log(error)
-            return { success: false, message: error.response?.data?.message || 'Cập nhật không thành công' };
-        }
+
+    updateProfile(formData: FormData) {
+        const url = '/api/user/update-profile';
+        return axiosClient.put(url, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
     },
 };
 

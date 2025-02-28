@@ -1,151 +1,112 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image, ActivityIndicator } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import {
+    View,
+    Text,
+    TextInput,
+    Image,
+    StyleSheet,
+    TouchableOpacity,
+    ActivityIndicator,
+    ScrollView,
+    KeyboardAvoidingView,
+    Platform,
+    TouchableWithoutFeedback,
+    Keyboard,
+} from 'react-native';
+import { showMessage } from 'react-native-flash-message';
 import * as ImagePicker from 'expo-image-picker';
 import profileService from '../../service/api/profileService';
-const formatDateToInput = (isoDate: string) => {
-    if (!isoDate) return '';
-    const [year, month, day] = isoDate.split('T')[0].split('-').map(Number);
-    return `${day}/${month}/${year}`;
-};
-const EditProfileScreen = ({ route }: any) => {
-    const navigation = useNavigation();
+import Icon from 'react-native-vector-icons/AntDesign';
+import mime from 'react-native-mime-types';
+
+const EditProfileScreen = ({ navigation, route }: any) => {
     const { userData } = route.params;
 
     const [fullName, setFullName] = useState(userData.fullName);
     const [phoneNumber, setPhoneNumber] = useState(userData.phoneNumber || '');
     const [address, setAddress] = useState(userData.address || '');
-    const [dateOfBirth, setDateOfBirth] = useState(() => {
-        return userData.dateOfBirth ? formatDateToInput(userData.dateOfBirth) : '';
-    });
-    const [newImageUri, setNewImageUri] = useState('');
+    const [avatarUrl, setAvatarUrl] = useState(userData.avatarUrl);
+    const [file, setFile] = useState<any>(null);
+    const [dateOfBirth, setDateOfBirth] = useState(formatDate(userData.dateOfBirth || ''));
     const [loading, setLoading] = useState(false);
-    const [errorMessage, setErrorMessage] = useState('');
-    const [dateErrorMessage, setDateErrorMessage] = useState('');
-    const formatDateForAPI = (dateString: string) => {
-        const [day, month, year] = dateString.split('/').map(Number);
-        return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}T00:00:00`;
-    };
-    const isValidDate = (day: number, month: number, year: number) => {
-        const date = new Date(year, month - 1, day);
-        return (
-            date.getFullYear() === year &&
-            date.getMonth() === month - 1 &&
-            date.getDate() === day
-        );
-    };
-    const handleDateChange = (text: string) => {
-        let formattedText = text.replace(/[^0-9/]/g, '');
+    const [errors, setErrors] = useState<any>({});
 
-        if (formattedText.length > 10) {
-            setDateErrorMessage('Ngày sinh không hợp lệ');
+    function formatDate(dateString: string) {
+        if (!dateString) return '';
+        const [year, month, day] = dateString.split('T')[0].split('-');
+        return `${day}/${month}/${year}`;
+    }
+
+    function convertToLocalDateTime(dateString: string) {
+        if (!dateString) return '';
+        const [day, month, year] = dateString.split('/');
+        return `${year}-${month}-${day}T00:00:00`;
+    }
+
+    function validateInputs() {
+        let errors: any = {};
+        if (!fullName.trim()) {
+            errors.fullName = 'Họ và tên không được để trống!';
+        } else if (fullName.length > 50) {
+            errors.fullName = 'Họ và tên không được quá 50 ký tự!';
+        }
+
+        if (!phoneNumber.trim()) {
+            errors.phoneNumber = 'Số điện thoại không được để trống!';
+        } else if (!/^[0-9]{10}$/.test(phoneNumber)) {
+            errors.phoneNumber = 'Số điện thoại phải có đúng 10 chữ số!';
+        }
+
+        if (!address.trim()) {
+            errors.address = 'Địa chỉ không được để trống!';
+        } else if (address.length > 255) {
+            errors.address = 'Địa chỉ không được quá 255 ký tự!';
+        }
+
+        if (!dateOfBirth.trim()) {
+            errors.dateOfBirth = 'Ngày sinh không được để trống!';
+        } else if (!/^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/.test(dateOfBirth)) {
+            errors.dateOfBirth = 'Ngày sinh phải đúng định dạng dd/MM/yyyy!';
+        }
+
+        setErrors(errors);
+        return Object.keys(errors).length === 0;
+    }
+
+    const handleUpdateProfile = async () => {
+        if (!validateInputs()) {
+            showMessage({ message: 'Lỗi', description: 'Vui lòng kiểm tra lại thông tin!', type: 'danger' });
             return;
         }
 
-        const parts = formattedText.split('/').map(Number);
-
-        if (parts.length === 3) {
-            let [day, month, year] = parts;
-
-            const dayStr = day.toString().padStart(2, '0');
-            const monthStr = month.toString().padStart(2, '0');
-            const formattedDate = `${dayStr}/${monthStr}/${year}`;
-
-            setDateOfBirth(formattedDate);
-
-            if (isValidDate(day, month, year)) {
-                setDateErrorMessage('');
-            } else {
-                setDateErrorMessage('Ngày không tồn tại');
-            }
-        } else {
-            setDateOfBirth(formattedText);
-            setDateErrorMessage('Định dạng không đúng (DD/MM/YYYY)');
-        }
-    };
-    const handleSave = async () => {
         setLoading(true);
+        const formattedDate = convertToLocalDateTime(dateOfBirth);
+
+        const profileRequest = { fullName, phoneNumber, address, dateOfBirth: formattedDate };
+        const formData = new FormData();
+        formData.append('profileRequest', JSON.stringify(profileRequest));
+
+        if (file) {
+            formData.append('file', {
+                uri: file.uri,
+                type: mime.lookup(file.uri) || 'image/jpeg',
+                name: file.uri.split('/').pop(),
+            } as any);
+        }
+
         try {
-            const formData = new FormData();
-            formData.append('profileRequest', new Blob([JSON.stringify({
-                fullName,
-                phoneNumber: phoneNumber.toString(),
-                address,
-                dateOfBirth: formatDateForAPI(dateOfBirth),
-                avatarUrl: userData.avatarUrl
-            })], { type: 'application/json' }));
-            if (newImageUri) {
-                try {
-                    let fileName = `image_${Date.now()}.png`;
-                    let fileExt = 'png';
-                    let blob: Blob;
-
-                    if (newImageUri.startsWith('data:image')) {
-                        console.log("📌 Ảnh đang ở dạng Base64");
-                        const mimeTypeMatch = newImageUri.match(/^data:(image\/[a-z]+);base64,/);
-                        if (!mimeTypeMatch) {
-                            throw new Error("Không thể xác định định dạng ảnh");
-                        }
-
-                        const mimeType = mimeTypeMatch[1];
-                        fileExt = mimeType.split('/')[1];
-                        fileName = `image_${Date.now()}.${fileExt}`;
-                        const base64Data = newImageUri.replace(/^data:image\/[a-z]+;base64,/, '');
-                        const byteCharacters = atob(base64Data);
-                        const byteNumbers = new Array(byteCharacters.length);
-                        for (let i = 0; i < byteCharacters.length; i++) {
-                            byteNumbers[i] = byteCharacters.charCodeAt(i);
-                        }
-                        const byteArray = new Uint8Array(byteNumbers);
-                        blob = new Blob([byteArray], { type: mimeType });
-
-                    } else {
-                        console.log("📌 Ảnh đang ở dạng file URI:", newImageUri);
-
-                        const response = await fetch(newImageUri);
-                        blob = await response.blob();
-                        const mimeType = blob.type;
-                        const mimeToExt: Record<string, string> = {
-                            "image/jpeg": "jpg",
-                            "image/png": "png",
-                            "image/gif": "gif",
-                            "image/bmp": "bmp",
-                        };
-
-                        fileExt = mimeToExt[mimeType] || 'png';
-                        fileName = `image_${Date.now()}.${fileExt}`;
-                    }
-
-                    console.log(`📝 File chuẩn bị gửi: ${fileName}, MIME: ${blob.type}`);
-                    formData.append('file', blob, fileName);
-
-                } catch (error) {
-                    console.error("❌ Lỗi khi xử lý ảnh:", error);
-                    Alert.alert('Lỗi', 'Không thể xử lý ảnh. Vui lòng thử lại.');
-                    setLoading(false);
-                    return;
-                }
-            }
-            const response = await profileService.updateProfile(formData);
-            setLoading(false);
-
-            if (response.success) {
-                Alert.alert('Thành công', 'Cập nhật thông tin thành công!');
-                console.log('Thành công', 'Cập nhật thông tin thành công!');
-                navigation.goBack();
-            } else {
-                Alert.alert('Lỗi', response.message || 'Cập nhật không thành công');
-                console.log('Lỗi', response.message || 'Cập nhật không thành công');
-            }
-
+            await profileService.updateProfile(formData);
+            showMessage({ message: 'Thành công', description: 'Hồ sơ đã được cập nhật!', type: 'success' });
+            navigation.goBack();
         } catch (error) {
+            showMessage({ message: 'Lỗi', description: 'Không thể cập nhật hồ sơ.', type: 'danger' });
+        } finally {
             setLoading(false);
-            console.error('Lỗi khi cập nhật hồ sơ:', error);
-            Alert.alert('Lỗi', 'Có lỗi xảy ra khi cập nhật hồ sơ');
         }
     };
+
     const pickImage = async () => {
-        let result = await ImagePicker.launchImageLibraryAsync({
+        const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
             aspect: [1, 1],
@@ -153,154 +114,113 @@ const EditProfileScreen = ({ route }: any) => {
         });
 
         if (!result.canceled) {
-            setNewImageUri(result.assets[0].uri);
+            setFile(result.assets[0]);
+            setAvatarUrl(result.assets[0].uri);
         }
     };
-    const handlePhoneChange = (text: string) => {
-        const formattedText = text.replace(/[^0-9]/g, '');
-        if (formattedText.length > 10) {
-            setErrorMessage('Số điện thoại không hợp lệ');
-        } else {
-            setErrorMessage('');
-        }
-        setPhoneNumber(formattedText);
-    };
+
     return (
-        <View style={styles.container}>
-            <TouchableOpacity onPress={pickImage} style={styles.avatarContainer}>
-                <Image source={{ uri: newImageUri || userData.avatarUrl || 'https://via.placeholder.com/120' }} style={styles.avatar} />
-                <Text style={styles.changeAvatarText}>Chọn ảnh</Text>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+            {/* Nút Back */}
+            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+                <Icon name='arrowleft' size={24} color='#000' />
             </TouchableOpacity>
 
-            <Text style={styles.label}>Họ và tên:</Text>
-            <TextInput style={styles.input} value={fullName} onChangeText={setFullName} />
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                <ScrollView contentContainerStyle={styles.scrollContainer}>
+                    <View style={styles.container}>
+                        <Text style={styles.title}>CẬP NHẬT HỒ SƠ</Text>
 
-            <Text style={styles.label}>Số điện thoại:</Text>
-            <TextInput
-                style={styles.input}
-                value={phoneNumber}
-                onChangeText={handlePhoneChange}
-                keyboardType="numeric"
-                placeholder="Nhập số điện thoại"
-            />
-            {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+                        <TouchableOpacity onPress={pickImage}>
+                            <Image
+                                source={{ uri: avatarUrl || 'https://via.placeholder.com/120' }}
+                                style={styles.avatar}
+                            />
+                        </TouchableOpacity>
 
-            <Text style={styles.label}>Địa chỉ:</Text>
-            <TextInput style={styles.input} value={address} onChangeText={setAddress} />
+                        <View style={styles.inputContainer}>
+                            <Text style={styles.label}>Họ và tên</Text>
+                            <TextInput style={styles.input} value={fullName} onChangeText={setFullName} />
+                            {errors.fullName && <Text style={styles.error}>{errors.fullName}</Text>}
+                        </View>
 
-            <Text style={styles.label}>Ngày sinh:</Text>
-            <TextInput
-                style={styles.input}
-                value={dateOfBirth}
-                onChangeText={handleDateChange}
-                placeholder="DD/MM/YYYY"
-                keyboardType="numeric"
-            />
-            {dateErrorMessage ? <Text style={styles.errorText}>{dateErrorMessage}</Text> : null}
+                        <View style={styles.inputContainer}>
+                            <Text style={styles.label}>Số điện thoại</Text>
+                            <TextInput
+                                style={styles.input}
+                                value={phoneNumber}
+                                onChangeText={setPhoneNumber}
+                                keyboardType='numeric'
+                            />
+                            {errors.phoneNumber && <Text style={styles.error}>{errors.phoneNumber}</Text>}
+                        </View>
 
+                        <View style={styles.inputContainer}>
+                            <Text style={styles.label}>Địa chỉ</Text>
+                            <TextInput style={styles.input} value={address} onChangeText={setAddress} />
+                            {errors.address && <Text style={styles.error}>{errors.address}</Text>}
+                        </View>
 
-            <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={loading}>
-                {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveButtonText}>Lưu</Text>}
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} disabled={loading}>
-                {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveButtonText}>Quay lại</Text>}
-            </TouchableOpacity>
+                        <View style={styles.inputContainer}>
+                            <Text style={styles.label}>Ngày sinh (dd/MM/yyyy)</Text>
+                            <TextInput
+                                style={styles.input}
+                                value={dateOfBirth}
+                                onChangeText={setDateOfBirth}
+                                keyboardType='numeric'
+                            />
+                            {errors.dateOfBirth && <Text style={styles.error}>{errors.dateOfBirth}</Text>}
+                        </View>
 
-        </View>
+                        {loading ? (
+                            <ActivityIndicator size='large' color='#007bff' style={styles.loadingIndicator} />
+                        ) : (
+                            <TouchableOpacity style={styles.button} onPress={handleUpdateProfile}>
+                                <Text style={styles.buttonText}>Lưu thay đổi</Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                </ScrollView>
+            </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
     );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 20,
-        backgroundColor: '#F4F6F9',
-        alignItems: 'center',
-    },
-    avatarContainer: {
-        alignItems: 'center',
-        marginBottom: 20,
-    },
-    avatar: {
-        width: 130,
-        height: 130,
-        borderRadius: 65,
-        borderWidth: 3,
-        borderColor: '#007bff',
-    },
-    changeAvatarText: {
-        marginTop: 8,
-        color: '#007bff',
-        fontSize: 15,
-        fontWeight: '500',
-    },
-    label: {
-        fontSize: 16,
-        fontWeight: '600',
-        marginTop: 12,
-        color: '#444',
-        alignSelf: 'flex-start',
-    },
+    scrollContainer: { flexGrow: 1, top: 24 },
+    container: { flex: 1, padding: 20, alignItems: 'center', backgroundColor: '#f8f9fa' },
+    title: { fontSize: 26, fontWeight: 'bold', marginBottom: 20, color: '#a4a2a2', marginTop: 40 },
+    avatar: { width: 130, height: 130, borderRadius: 65, marginBottom: 20, borderWidth: 2, borderColor: '#007bff' },
+    inputContainer: { width: '100%', marginBottom: 12 },
+    label: { fontSize: 16, fontWeight: 'bold', color: '#555', marginBottom: 5 },
     input: {
+        height: 45,
         borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 12,
-        padding: 14,
-        marginTop: 6,
-        width: '100%',
+        borderRadius: 10,
+        paddingHorizontal: 12,
         backgroundColor: '#fff',
         fontSize: 16,
-        shadowColor: '#000',
-        shadowOpacity: 0.05,
-        shadowOffset: { width: 0, height: 2 },
-        shadowRadius: 4,
-        elevation: 2,
     },
-    saveButton: {
+    error: { color: 'red', fontSize: 14, marginTop: 2 },
+    button: {
         backgroundColor: '#007bff',
-        padding: 16,
-        borderRadius: 12,
+        padding: 12,
+        borderRadius: 10,
         alignItems: 'center',
-        marginTop: 25,
         width: '100%',
-        shadowColor: '#000',
-        shadowOpacity: 0.1,
-        shadowOffset: { width: 0, height: 2 },
-        shadowRadius: 4,
-        elevation: 3,
+        marginTop: 10,
     },
-    saveButtonText: {
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
+    buttonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+    loadingIndicator: { marginVertical: 10 },
     backButton: {
-        backgroundColor: '#6c757d',
-        paddingVertical: 14,
-        paddingHorizontal: 20,
-        borderRadius: 12,
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexDirection: 'row',
-        marginTop: 12,
-        width: '100%',
-        shadowColor: '#000',
-        shadowOpacity: 0.1,
-        shadowOffset: { width: 0, height: 2 },
-        shadowRadius: 4,
-        elevation: 3,
-    },
-    backButtonText: {
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    errorText: {
-        color: 'red',
-        fontSize: 11,
-        marginTop: 5,
+        position: 'absolute',
+        top: 60,
+        left: 16,
+        backgroundColor: 'rgba(255, 255, 255, 0.7)',
+        padding: 8,
+        borderRadius: 50,
+        zIndex: 10,
     },
 });
-
 
 export default EditProfileScreen;

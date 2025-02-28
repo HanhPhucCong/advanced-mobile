@@ -26,6 +26,5 @@ public class ProfileRequest {
   @Past(message = "Date of birth must be in the past!")
   private LocalDateTime dateOfBirth;
 
-  private String avatarUrl =
-      "https://res.cloudinary.com/dftznqjsj/image/upload/v1729934084/round-account-button-with-user-inside_ehcrfp.png";
+  private String avatarUrl;
 }
