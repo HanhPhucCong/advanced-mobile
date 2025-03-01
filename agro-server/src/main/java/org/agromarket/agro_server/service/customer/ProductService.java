@@ -10,4 +10,8 @@ public interface ProductService {
   public ProductResponse create(ProductRequest productRequest);
 
   public Page<ProductResponse> getAllActive(Pageable pageable);
+
+  Page<ProductResponse> getProductByCategory(Long categoryId, Pageable pageable);
+  public Page<ProductResponse> getRandomProduct(Pageable pageable);
+  public Page<ProductResponse> searchProductsByName(String name, Pageable pageable);
 }
