@@ -1,7 +1,10 @@
 package org.agromarket.agro_server.service.customer.Impl;
 
+import java.util.Collections;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.agromarket.agro_server.exception.NotFoundException;
 import org.agromarket.agro_server.model.dto.request.ProductRequest;
 import org.agromarket.agro_server.model.dto.response.ProductResponse;
 import org.agromarket.agro_server.model.entity.Category;
@@ -16,9 +19,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -27,6 +27,7 @@ public class ProductServiceImpl implements ProductService {
   private final ProductRepository productRepository;
   private final ProductMapper productMapper;
   private final CategoryRepository categoryRepository;
+
   @Transactional
   @Override
   public ProductResponse create(ProductRequest productRequest) {
@@ -39,31 +40,42 @@ public class ProductServiceImpl implements ProductService {
     Page<Product> products = productRepository.getAllByIsActiveTrueAndIsDeletedFalse(pageable);
     return products.map(productMapper::convertToReponse);
   }
+
   @Override
   public Page<ProductResponse> getProductByCategory(Long categoryId, Pageable pageable) {
-    Category category = categoryRepository.findById(categoryId)
-            .orElseThrow(() -> new IllegalArgumentException("Category not found with id: " + categoryId));
+    Category category =
+        categoryRepository
+            .findById(categoryId)
+            .orElseThrow(
+                () -> new IllegalArgumentException("Category not found with id: " + categoryId));
 
     Page<Product> products = productRepository.getProductsByCategory(category, pageable);
 
     return products.map(productMapper::convertToReponse);
   }
+
   @Override
   public Page<ProductResponse> getRandomProduct(Pageable pageable) {
     List<Product> products = productRepository.findAllByIsActiveTrueAndIsDeletedFalse();
     Collections.shuffle(products);
-    List<Product> randomProducts = products.stream()
-            .limit(10)
-            .toList();
-    List<ProductResponse> productResponses = randomProducts.stream()
-            .map(productMapper::convertToReponse)
-            .toList();
+    List<Product> randomProducts = products.stream().limit(10).toList();
+    List<ProductResponse> productResponses =
+        randomProducts.stream().map(productMapper::convertToReponse).toList();
     return new PageImpl<>(productResponses, pageable, productResponses.size());
   }
+
   @Override
   public Page<ProductResponse> searchProductsByName(String name, Pageable pageable) {
     Page<Product> products = productRepository.searchProductsByName(name, pageable);
     return products.map(productMapper::convertToReponse);
   }
 
+  @Override
+  public ProductResponse getById(Long id) {
+    Product product =
+        productRepository
+            .findById(id)
+            .orElseThrow(() -> new NotFoundException("Product cannot found"));
+    return productMapper.convertToReponse(product);
+  }
 }

@@ -10,6 +10,8 @@ import OtpVerificationScreen from '../screens/auth/OtpVerificationScreen';
 import EditProfileScreen from '../screens/home/EditProfileScreen';
 import ProductDetailScreen from '../screens/home/ProductDetailScreen';
 import ChangePasswordScreen from '../screens/home/ChangePasswordScreen';
+import CartScreen from '../screens/home/CartScreen';
+import FavoriteScreen from '../screens/home/FavoriteScreen';
 
 const AuthNavigator = () => {
     const Stack = createNativeStackNavigator();
@@ -26,6 +28,8 @@ const AuthNavigator = () => {
             <Stack.Screen name='EditProfile' component={EditProfileScreen} />
             <Stack.Screen name='ProductDetailScreen' component={ProductDetailScreen} />
             <Stack.Screen name='ChangePassword' component={ChangePasswordScreen} />
+            <Stack.Screen name='CartScreen' component={CartScreen} />
+            <Stack.Screen name='FavoriteScreen' component={FavoriteScreen} />
         </Stack.Navigator>
     );
 };

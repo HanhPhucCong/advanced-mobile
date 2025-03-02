@@ -10,6 +10,8 @@ import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
 import ResetPasswordScreen from '../screens/auth/ResetPasswordScreen';
 import OtpVerificationScreen from '../screens/auth/OtpVerificationScreen';
 import SignupScreen from '../screens/auth/SignupScreen';
+import CartScreen from '../screens/home/CartScreen';
+import FavoriteScreen from '../screens/home/FavoriteScreen';
 
 const MainNavigator = () => {
     return (
@@ -19,6 +21,8 @@ const MainNavigator = () => {
             <Stack.Screen name='EditProfile' component={EditProfileScreen} />
             <Stack.Screen name='ChangePassword' component={ChangePasswordScreen} />
             <Stack.Screen name='ProductDetailScreen' component={ProductDetailScreen} />
+            <Stack.Screen name='CartScreen' component={CartScreen} />
+            <Stack.Screen name='FavoriteScreen' component={FavoriteScreen} />
             <Stack.Screen name='LoginScreen' component={LoginScreen} />
             <Stack.Screen name='SignupScreen' component={SignupScreen} />
             <Stack.Screen name='ForgotPasswordScreen' component={ForgotPasswordScreen} />

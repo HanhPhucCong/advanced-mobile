@@ -64,7 +64,7 @@ public class CartServiceImpl implements CartService {
 
       // +1 and out of stock
       if (quantityChange == 1 && newQuantity > product.getQuantity()) {
-        throw new CustomException("Insufficient stock for product with id: " + productId, 400);
+        throw new CustomException("The quantity of products in stock is no longer enough!", 400);
       }
 
       // -1 and <=0
@@ -79,7 +79,7 @@ public class CartServiceImpl implements CartService {
     // +1 and chua co trong gio hang
     else if (quantityChange == 1) {
       if (product.getQuantity() < 1) {
-        throw new CustomException("Insufficient stock for product with id: " + productId, 400);
+        throw new CustomException("The quantity of products in stock is no longer enough!", 400);
       }
 
       LineItem newLineItem = new LineItem();
@@ -121,7 +121,7 @@ public class CartServiceImpl implements CartService {
             .orElseThrow(() -> new NotFoundException("Product not found with id: " + productId));
 
     if (product.getQuantity() < quantity) {
-      throw new CustomException("Insufficient stock for product with id: " + productId, 400);
+      throw new CustomException("The quantity of products in stock is no longer enough!", 400);
     }
 
     Optional<LineItem> existingLineItem =

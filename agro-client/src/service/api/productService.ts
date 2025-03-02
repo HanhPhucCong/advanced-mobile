@@ -12,6 +12,10 @@ const productService = {
         const url = '/api/public/products/all-active';
         return axiosClient.get(url, { params: params || {} });
     },
+    getById(id: number) {
+        const url = `/api/public/products/${id}`;
+        return axiosClient.get(url);
+    },
 };
 
 export default productService;
