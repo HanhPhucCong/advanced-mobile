@@ -40,34 +40,37 @@ public class ProductController {
 
     return ResponseEntity.ok(new BaseResponse("Get all active successfully!", 200, products));
   }
+
   @GetMapping("/public/products/category/{categoryId}")
   public ResponseEntity<BaseResponse> getProductByCategory(
-          @PathVariable Long categoryId,
-          @RequestParam(defaultValue = "0") int page,
-          @RequestParam(defaultValue = "10") int size,
-          @RequestParam(defaultValue = "id") String sortBy,
-          @RequestParam(defaultValue = "asc") String direction) {
+      @PathVariable Long categoryId,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size,
+      @RequestParam(defaultValue = "id") String sortBy,
+      @RequestParam(defaultValue = "asc") String direction) {
 
     Pageable pageable =
-            PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(direction), sortBy));
+        PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(direction), sortBy));
     Page<ProductResponse> products = productService.getProductByCategory(categoryId, pageable);
-    return ResponseEntity.ok(new BaseResponse("Get products by category successfully!", 200, products));
+    return ResponseEntity.ok(
+        new BaseResponse("Get products by category successfully!", 200, products));
   }
+
   @GetMapping("/public/products/random")
   public ResponseEntity<BaseResponse> getRandomProducts(
-          @RequestParam(defaultValue = "0") int page,
-          @RequestParam(defaultValue = "10") int size) {
+      @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
 
     Pageable pageable = PageRequest.of(page, size);
     Page<ProductResponse> products = productService.getRandomProduct(pageable);
 
     return ResponseEntity.ok(new BaseResponse("Get random products successfully!", 200, products));
   }
+
   @GetMapping("/public/products/search")
   public ResponseEntity<BaseResponse> searchProductsByName(
-          @RequestParam String name,
-          @RequestParam(defaultValue = "0") int page,
-          @RequestParam(defaultValue = "10") int size) {
+      @RequestParam String name,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size) {
 
     Pageable pageable = PageRequest.of(page, size);
     Page<ProductResponse> products = productService.searchProductsByName(name, pageable);
@@ -75,4 +78,9 @@ public class ProductController {
     return ResponseEntity.ok(new BaseResponse("Search products successfully!", 200, products));
   }
 
+  @GetMapping("/public/products/{id}")
+  public ResponseEntity<BaseResponse> getProductById(@PathVariable Long id) {
+    return ResponseEntity.ok(
+        new BaseResponse("Get product by id successfully!", 200, productService.getById(id)));
+  }
 }

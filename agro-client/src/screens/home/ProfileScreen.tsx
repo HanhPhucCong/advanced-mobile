@@ -1,7 +1,9 @@
 import { useFocusEffect } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, Image, ActivityIndicator, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, Image, ActivityIndicator, StyleSheet, ScrollView, TouchableOpacity, Button } from 'react-native';
 import profileService from '../../service/api/profileService';
+import authService from '../../service/api/authService';
 
 type User = {
     id: number;
@@ -45,6 +47,26 @@ const ProfileScreen = ({ navigation }: any) => {
         return `${day}/${month}/${year}`;
     };
 
+    const getToken = async () => {
+        const token = await AsyncStorage.getItem('token');
+        const refreshToken = await AsyncStorage.getItem('refreshToken');
+        return { token, refreshToken };
+    };
+
+    const handleLogout = async () => {
+        try {
+            const { token, refreshToken } = await getToken();
+            const signoutRequest: any = { token, refreshToken };
+            await authService.signout(signoutRequest);
+
+            await AsyncStorage.clear();
+
+            navigation.navigate('LoginScreen');
+        } catch (err) {
+            console.error('Signout failed: ', err);
+        }
+    };
+
     return (
         <ScrollView contentContainerStyle={styles.container}>
             {loading ? (
@@ -66,17 +88,29 @@ const ProfileScreen = ({ navigation }: any) => {
                         <InfoRow label='Lịch sử mua hàng' value={'Chưa có'} />
                     </View>
                     <View style={styles.buttonContainer}>
-                        <TouchableOpacity style={styles.editButton} onPress={() => navigation.navigate('EditProfile', { userData })}>
-                            <Text style={styles.editButtonText} numberOfLines={1}>Sửa hồ sơ</Text>
+                        <TouchableOpacity
+                            style={styles.editButton}
+                            onPress={() => navigation.navigate('EditProfile', { userData })}
+                        >
+                            <Text style={styles.editButtonText} numberOfLines={1}>
+                                Sửa hồ sơ
+                            </Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.changePasswordButton} onPress={() => navigation.navigate('ChangePassword', { userData })}>
-                            <Text style={styles.changePasswordText} numberOfLines={1}>Đổi mật khẩu</Text>
+                        <TouchableOpacity
+                            style={styles.changePasswordButton}
+                            onPress={() => navigation.navigate('ChangePassword', { userData })}
+                        >
+                            <Text style={styles.changePasswordText} numberOfLines={1}>
+                                Đổi mật khẩu
+                            </Text>
                         </TouchableOpacity>
                     </View>
                 </View>
             ) : (
                 <Text style={styles.errorText}>Không thể tải dữ liệu người dùng.</Text>
             )}
+
+            <Button title='Logout' onPress={handleLogout} />
         </ScrollView>
     );
 };
