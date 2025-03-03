@@ -3,6 +3,7 @@ import { View, Text, FlatList, Image, ActivityIndicator, Dimensions, StyleSheet,
 import categoryService from '../../service/api/categoryService';
 import productService from '../../service/api/productService';
 import formatCurrency from '../../utils/formatCurrency';
+import { useNavigation } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 
@@ -129,9 +130,15 @@ const HomeScreen = ({ navigation }: any) => {
     const renderBanner = ({ item }: { item: string }) => <Image source={{ uri: item }} style={styles.carouselImage} />;
 
     const renderCategoryItem = ({ item }: { item: Category }) => (
-        <View style={styles.categoryItem}>
-            <Text>{item.name}</Text>
-        </View>
+        <TouchableOpacity
+            style={styles.categoryItem}
+            onPress={() => navigation.navigate('ProductForCategoryScreen', { 
+                categoryId: item.id, 
+                categoryName: item.name 
+            })}
+        >
+            <Text style={styles.categoryText}>{item.name}</Text>
+        </TouchableOpacity>
     );
 
     const renderProductItem = ({ item }: { item: Product }) => (
@@ -197,6 +204,11 @@ const styles = StyleSheet.create({
     carouselImage: { width: width, height: 220, resizeMode: 'cover' },
     categoryList: { paddingVertical: 10 },
     categoryItem: { marginHorizontal: 10, padding: 10, backgroundColor: '#ddd', borderRadius: 5 },
+    categoryText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#333',
+    },
     productList: { paddingVertical: 10 },
     sectionTitle: { fontSize: 18, fontWeight: 'bold', marginVertical: 10, marginLeft: 10 },
     row: { justifyContent: 'space-between', paddingHorizontal: 10 },

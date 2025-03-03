@@ -12,7 +12,7 @@ import ProductDetailScreen from '../screens/home/ProductDetailScreen';
 import ChangePasswordScreen from '../screens/home/ChangePasswordScreen';
 import CartScreen from '../screens/home/CartScreen';
 import FavoriteScreen from '../screens/home/FavoriteScreen';
-
+import ProductForCategoryScreen from '../screens/home/ProductForCategoryScreen';
 const AuthNavigator = () => {
     const Stack = createNativeStackNavigator();
 
@@ -30,6 +30,7 @@ const AuthNavigator = () => {
             <Stack.Screen name='ChangePassword' component={ChangePasswordScreen} />
             <Stack.Screen name='CartScreen' component={CartScreen} />
             <Stack.Screen name='FavoriteScreen' component={FavoriteScreen} />
+            <Stack.Screen name='ProductForCategoryScreen' component={ProductForCategoryScreen} />
         </Stack.Navigator>
     );
 };
