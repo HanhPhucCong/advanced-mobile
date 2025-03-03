@@ -58,7 +58,7 @@ public class ProductServiceImpl implements ProductService {
   public Page<ProductResponse> getRandomProduct(Pageable pageable) {
     List<Product> products = productRepository.findAllByIsActiveTrueAndIsDeletedFalse();
     Collections.shuffle(products);
-    List<Product> randomProducts = products.stream().limit(10).toList();
+    List<Product> randomProducts = products.stream().limit(8).toList();
     List<ProductResponse> productResponses =
         randomProducts.stream().map(productMapper::convertToReponse).toList();
     return new PageImpl<>(productResponses, pageable, productResponses.size());
