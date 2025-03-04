@@ -26,6 +26,8 @@ public interface LineItemRepository extends JpaRepository<LineItem, Long> {
   int removeOrderFromLineItems(@Param("time") LocalDateTime time);
 
   @Query(
-      "SELECT l FROM LineItem l WHERE l.order.id IN (SELECT o.id FROM Order o WHERE o.status = 'PENDING' AND o.createdAt < :time)")
+      "SELECT l FROM LineItem l WHERE l.order.id IN "
+          + "(SELECT o.id FROM Order o WHERE o.status = 'PENDING' AND o.paymentMethod = 'WAITING' "
+          + "AND o.createdAt < :time)")
   List<LineItem> findExpiredLineItems(@Param("time") LocalDateTime time);
 }
