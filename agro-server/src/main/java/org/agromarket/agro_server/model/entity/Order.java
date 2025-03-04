@@ -1,12 +1,14 @@
 package org.agromarket.agro_server.model.entity;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.agromarket.agro_server.common.OrderStatus;
+import org.agromarket.agro_server.common.PaymentMethod;
 
 @Entity
 @Table(name = "orders")
@@ -38,4 +40,13 @@ public class Order extends BaseEntity {
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
   private OrderStatus status;
+
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private PaymentMethod paymentMethod;
+
+  private LocalDateTime paymentDate;
+
+  @Enumerated(EnumType.STRING)
+  private OrderStatus previousStatus;
 }

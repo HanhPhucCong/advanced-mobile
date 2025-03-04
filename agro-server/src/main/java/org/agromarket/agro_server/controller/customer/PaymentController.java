@@ -23,6 +23,7 @@ public class PaymentController {
 
   private final PaymentService paymentService;
 
+  // thanh toan ONLINE (VNPay)
   @PreAuthorize("hasAnyAuthority('CUSTOMER', 'ADMIN')")
   @PostMapping("/payment/create-payment")
   public ResponseEntity<?> createPayment(

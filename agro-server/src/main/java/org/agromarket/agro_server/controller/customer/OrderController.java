@@ -1,20 +1,66 @@
 package org.agromarket.agro_server.controller.customer;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.agromarket.agro_server.common.BaseResponse;
+import org.agromarket.agro_server.model.dto.request.CheckoutRequest;
 import org.agromarket.agro_server.service.customer.OrderService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/order")
 @RequiredArgsConstructor
 public class OrderController {
   private final OrderService orderService;
+
+  @PreAuthorize("hasAnyAuthority('ADMIN', 'CUSTOMER')")
+  @PostMapping("/checkout-by-cod")
+  public ResponseEntity<BaseResponse> checkoutByCash(
+      @Valid @RequestBody CheckoutRequest checkoutRequest) {
+    return ResponseEntity.ok(
+        new BaseResponse(
+            "Create Order successfully, please wait for confirm!",
+            200,
+            orderService.checkoutByCOD(checkoutRequest)));
+  }
+
+  @PreAuthorize("hasAnyAuthority('ADMIN')")
+  @PutMapping("/confirm-cod/{orderId}")
+  public ResponseEntity<BaseResponse> confirmCODOrder(@PathVariable("orderId") long orderId) {
+    return ResponseEntity.ok(
+        new BaseResponse(
+            "Confirm order successfully!", 200, orderService.confirmCODOrder(orderId)));
+  }
+
+  @PreAuthorize("hasAnyAuthority('ADMIN', 'CUSTOMER')")
+  @PutMapping("/cancel/{orderId}")
+  public ResponseEntity<BaseResponse> cancelOrder(@PathVariable("orderId") long orderId) {
+    return orderService.cancelOrder(orderId);
+  }
+
+  @PreAuthorize("hasAnyAuthority('ADMIN')")
+  @PutMapping("/approve-cancel-request/{orderId}")
+  public ResponseEntity<BaseResponse> approveCancelRequest(@PathVariable("orderId") long orderId) {
+    boolean isAprroved = true;
+    return ResponseEntity.ok(
+        new BaseResponse(
+            "Approved cancel request sucessfully!",
+            200,
+            orderService.handleCancelRequest(orderId, isAprroved)));
+  }
+
+  @PreAuthorize("hasAnyAuthority('ADMIN')")
+  @PutMapping("/reject-cancel-request/{orderId}")
+  public ResponseEntity<BaseResponse> rejectCancelRequest(@PathVariable("orderId") long orderId) {
+    boolean isAprroved = false;
+    return ResponseEntity.ok(
+        new BaseResponse(
+            "Rejected cancel request sucessfully!",
+            200,
+            orderService.handleCancelRequest(orderId, isAprroved)));
+  }
 
   @PreAuthorize("hasAnyAuthority('ADMIN', 'CUSTOMER')")
   @GetMapping("/my-orders")
@@ -38,5 +84,15 @@ public class OrderController {
             "Get all order (not deleted) successfully!",
             200,
             orderService.getAllStatus_NotDelete()));
+  }
+
+  @PreAuthorize("hasAnyAuthority('ADMIN')")
+  @GetMapping("/cancel-request")
+  public ResponseEntity<BaseResponse> getAllCancelRequests() {
+    return ResponseEntity.ok(
+        new BaseResponse(
+            "Get all orders with cancel request successfully!",
+            200,
+            orderService.getAllCancelRequest()));
   }
 }
