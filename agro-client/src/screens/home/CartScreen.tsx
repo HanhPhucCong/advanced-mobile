@@ -190,8 +190,10 @@ const CartScreen: React.FC = ({ navigation }: any) => {
     };
 
     const handleCheckout = () => {
-        const selectedProducts = cartItems.filter((item) => selectedItems.includes(item.id));
-        Alert.alert('Thanh toán', `Bạn sẽ thanh toán ${selectedProducts.length} sản phẩm.`);
+        const selectedLineItems = cartItems.filter((item) => selectedItems.includes(item.id));
+        if (selectedLineItems.length > 0) {
+            navigation.navigate('CheckoutScreen', { selectedLineItems });
+        }
     };
 
     const totalAmount = cartItems
