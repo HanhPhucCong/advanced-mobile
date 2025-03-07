@@ -1,6 +1,7 @@
 package org.agromarket.agro_server.util.vnpay;
 
 import jakarta.servlet.http.HttpServletRequest;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import javax.crypto.Mac;
@@ -52,5 +53,34 @@ public class VNPayUtil {
       sb.append(chars.charAt(rnd.nextInt(chars.length())));
     }
     return sb.toString();
+  }
+
+  public static boolean validateSignature(
+      Map<String, String> vnp_Params, String secretKey, String vnp_SecureHash) {
+    // Sắp xếp tham số theo thứ tự alphabet để tính mã 1 cách đồng nhất (bỏ qua vnp_SecureHash)
+    List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
+    Collections.sort(fieldNames);
+
+    StringBuilder hashData = new StringBuilder();
+    for (String fieldName : fieldNames) {
+      String fieldValue = vnp_Params.get(fieldName);
+      if (fieldValue != null && !fieldValue.isEmpty()) {
+        // key=value&
+        hashData.append(URLDecoder.decode(fieldName, StandardCharsets.UTF_8));
+        hashData.append('=');
+        hashData.append(URLDecoder.decode(fieldValue, StandardCharsets.UTF_8));
+        hashData.append('&');
+      }
+    }
+
+    if (hashData.length() > 0) {
+      hashData.setLength(hashData.length() - 1); // Xóa ký tự & cuối cùng
+    }
+
+    // Tính toán HMAC SHA512
+    String calculatedHash = hmacSHA512(secretKey, hashData.toString());
+
+    // So sánh hash tính toán với hash từ VNPay
+    return calculatedHash.equalsIgnoreCase(vnp_SecureHash);
   }
 }
