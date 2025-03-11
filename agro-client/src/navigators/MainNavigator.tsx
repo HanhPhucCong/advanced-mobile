@@ -13,6 +13,10 @@ import SignupScreen from '../screens/auth/SignupScreen';
 import CartScreen from '../screens/home/CartScreen';
 import FavoriteScreen from '../screens/home/FavoriteScreen';
 import ProductForCategoryScreen from '../screens/home/ProductForCategoryScreen';
+import CheckoutScreen from '../screens/home/(checkout)/CheckoutScreen';
+import VnpayScreen from '../screens/home/(checkout)/VnpayScreen';
+import PaymentFailedScreen from '../screens/home/(checkout)/PaymentFailedScreen';
+import PaymentSuccessScreen from '../screens/home/(checkout)/PaymentSuccessScreen';
 
 const MainNavigator = () => {
     return (
@@ -30,6 +34,10 @@ const MainNavigator = () => {
             <Stack.Screen name='ResetPasswordScreen' component={ResetPasswordScreen} />
             <Stack.Screen name='OtpVerificationScreen' component={OtpVerificationScreen} />
             <Stack.Screen name='ProductForCategoryScreen' component={ProductForCategoryScreen} />
+            <Stack.Screen name='CheckoutScreen' component={CheckoutScreen} />
+            <Stack.Screen name='VnpayScreen' component={VnpayScreen} />
+            <Stack.Screen name='PaymentFailedScreen' component={PaymentFailedScreen} />
+            <Stack.Screen name='PaymentSuccessScreen' component={PaymentSuccessScreen} />
         </Stack.Navigator>
     );
 };

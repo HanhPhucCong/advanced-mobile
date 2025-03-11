@@ -140,7 +140,8 @@ public class OrderServiceImpl implements OrderService {
   @Override
   public OrderResponse confirmOrder(Order order) {
     if (!order.getStatus().equals(OrderStatus.PENDING) || order.getIsDeleted()) {
-      throw new CustomException("Failed. Order has not pending yet!", 400);
+      throw new CustomException(
+          "Order processing request has been expired! Please try again.", 400);
     }
 
     // change order status
@@ -301,7 +302,8 @@ public class OrderServiceImpl implements OrderService {
     // (mot user chi thanh toan duoc 1 Order by cung luc)
     List<Order> processingOrders = orderRepository.findPayByCardByUserIdAndStatusPending(userId);
     if (!processingOrders.isEmpty()) {
-      throw new CustomException("Current user is processing other Order!", 409);
+      throw new CustomException(
+          "Current user is processing other Order! Please try again in 5 minutes later.", 409);
     }
 
     // 2. check co cart khong

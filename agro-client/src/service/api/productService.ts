@@ -29,10 +29,10 @@ const productService = {
         const url = `/api/public/products/${id}`;
         return axiosClient.get(url);
     },
-    getProductByCategory(id: number){
+    getProductByCategory(id: number) {
         const url = `/api/public/products/category/${id}`;
         return axiosClient.get(url);
-    }
+    },
 };
 
 export default productService;
