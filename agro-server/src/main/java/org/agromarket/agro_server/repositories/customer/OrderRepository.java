@@ -28,6 +28,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
   List<Order> getAllNotDeleted();
 
   List<Order> getByUserIdAndIsActiveTrueAndIsDeletedFalse(long userId);
+  List<Order> getByUserIdAndIsActiveTrue(long userId);
 
   @Query("SELECT o FROM Order o WHERE o.status = 'CANCELED_REQUEST'")
   List<Order> getByStatusCanceledRequest();

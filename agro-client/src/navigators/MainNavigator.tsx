@@ -17,6 +17,10 @@ import CheckoutScreen from '../screens/home/(checkout)/CheckoutScreen';
 import VnpayScreen from '../screens/home/(checkout)/VnpayScreen';
 import PaymentFailedScreen from '../screens/home/(checkout)/PaymentFailedScreen';
 import PaymentSuccessScreen from '../screens/home/(checkout)/PaymentSuccessScreen';
+import ListOrderScreen from '../screens/home/ListOrderScreen';
+import OrderScreen from '../screens/home/OrderScreen';
+
+// import ListDeliveryScreen from '../screens/home/ListDeliveryScreen';
 
 const MainNavigator = () => {
     return (
@@ -38,6 +42,8 @@ const MainNavigator = () => {
             <Stack.Screen name='VnpayScreen' component={VnpayScreen} />
             <Stack.Screen name='PaymentFailedScreen' component={PaymentFailedScreen} />
             <Stack.Screen name='PaymentSuccessScreen' component={PaymentSuccessScreen} />
+            <Stack.Screen name='ListOrderScreen' component={ListOrderScreen} />
+            <Stack.Screen name='OrderScreen' component={OrderScreen} />
         </Stack.Navigator>
     );
 };
