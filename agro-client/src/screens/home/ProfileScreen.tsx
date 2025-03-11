@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, Image, ActivityIndicator, StyleSheet, ScrollView, TouchableOpacity, Button } from 'react-native';
 import profileService from '../../service/api/profileService';
 import authService from '../../service/api/authService';
+import orderService from '../../service/api/orderService';
 
 type User = {
     id: number;
@@ -20,9 +21,27 @@ type User = {
     role: string;
     isEmailVerified: boolean;
 };
+interface Order {
+    id: number;
+    createdAt: string;
+    updatedAt: string;
+    isActive: boolean;
+    isDeleted: boolean;
+    userId: number;
+    lineItems: any[];
+    shippingAddress: string;
+    note: string;
+    totalAmount: number;
+    status: string;
+    paymentMethod: string;
+    paymentDate: string | null;
+}
+
 const ProfileScreen = ({ navigation }: any) => {
     const [loading, setLoading] = useState<boolean>(true);
     const [userData, setUserData] = useState<User | null>(null);
+    const [orders, setOrders] = useState<number>(0);
+    const [deliveredCount, setDeliveredCount] = useState<number>(0);
     const fetchUserData = async () => {
         setLoading(true);
         try {
@@ -35,8 +54,23 @@ const ProfileScreen = ({ navigation }: any) => {
         }
     };
 
+    const fetchOrderData = async () => {
+        setLoading(true);
+        try {
+            const response = await orderService.getMyOrder();
+            const ordersData: Order[] = response.data;
+            setOrders(ordersData.length);
+            const count = ordersData.filter((order: Order) => order.status === "PENDING" || order.status === "CONFIRMED" || order.status === "PROCESSING" || order.status === "SHIPPING").length;
+            setDeliveredCount(count);
+        } catch (error) {
+            console.error("Error fetching orders:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
     useFocusEffect(
         useCallback(() => {
+            fetchOrderData();
             fetchUserData();
         }, [])
     );
@@ -84,33 +118,52 @@ const ProfileScreen = ({ navigation }: any) => {
                         <InfoRow label='Số điện thoại' value={userData.phoneNumber || 'Chưa cập nhật'} />
                         <InfoRow label='Địa chỉ' value={userData.address || 'Chưa cập nhật'} />
                         <InfoRow label='Ngày sinh' value={formatDate(userData.dateOfBirth) || 'Chưa cập nhật'} />
-                        <InfoRow label='Đơn hàng đang vận chuyển' value={'Chưa có'} />
-                        <InfoRow label='Lịch sử mua hàng' value={'Chưa có'} />
+                        <InfoRow
+                            label='Đơn hàng đang vận chuyển'
+                            value={deliveredCount !== undefined ? deliveredCount.toString() : 'Chưa có'}
+                        />
+                        <InfoRow
+                            label='Tổng số đơn hàng'
+                            value={orders !== undefined ? orders.toString() : 'Chưa có'}
+                        />
+
                     </View>
                     <View style={styles.buttonContainer}>
                         <TouchableOpacity
-                            style={styles.editButton}
+                            style={[styles.button, styles.editButton]}
                             onPress={() => navigation.navigate('EditProfile', { userData })}
                         >
-                            <Text style={styles.editButtonText} numberOfLines={1}>
-                                Sửa hồ sơ
-                            </Text>
+                            <Text style={styles.buttonText}>Sửa hồ sơ</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={styles.changePasswordButton}
+                            style={[styles.button, styles.changePasswordButton]}
                             onPress={() => navigation.navigate('ChangePassword', { userData })}
                         >
-                            <Text style={styles.changePasswordText} numberOfLines={1}>
-                                Đổi mật khẩu
-                            </Text>
+                            <Text style={styles.buttonText}>Đổi mật khẩu</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.button, styles.orderListButton]}
+                            onPress={() => navigation.navigate('ListOrderScreen', { userData })}
+                        >
+                            <Text style={styles.buttonText}>Danh sách đơn hàng</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.button, styles.logoutButton]}
+                            onPress={handleLogout}
+                        >
+                            <Text style={styles.buttonText}>Đăng xuất</Text>
                         </TouchableOpacity>
                     </View>
+
+
                 </View>
             ) : (
-                <Text style={styles.errorText}>Không thể tải dữ liệu người dùng.</Text>
+                <TouchableOpacity>
+                    <Text style={styles.errorText}>Không thể tải dữ liệu người dùng.</Text>
+                    <Button title='Đăng xuất' onPress={handleLogout} />
+                </TouchableOpacity>
             )}
 
-            <Button title='Logout' onPress={handleLogout} />
         </ScrollView>
     );
 };
@@ -145,24 +198,6 @@ const styles = StyleSheet.create({
     infoLabel: { fontSize: 16, fontWeight: '500', color: '#444' },
     infoValue: { fontSize: 16, color: '#222' },
     errorText: { color: 'red', fontSize: 16, marginTop: 20 },
-    buttonContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        gap: 10, // Khoảng cách giữa hai button
-        marginTop: 15,
-    },
-
-    editButton: {
-        backgroundColor: '#007bff',
-        paddingVertical: 8,
-        paddingHorizontal: 15,
-        borderRadius: 6,
-        flex: 1, // Chia đều kích thước giữa hai button
-        alignItems: 'center',
-        justifyContent: 'center',
-        minWidth: 120, // Đảm bảo đủ chỗ để text không xuống hàng
-    },
-
     editButtonText: {
         color: '#fff',
         fontSize: 14,
@@ -171,23 +206,51 @@ const styles = StyleSheet.create({
         flexShrink: 1, // Ngăn text bị ép xuống dòng
     },
 
-    changePasswordButton: {
-        backgroundColor: '#28a745',
-        paddingVertical: 8,
-        paddingHorizontal: 15,
-        borderRadius: 6,
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        minWidth: 120, // Đảm bảo đủ rộng để tránh text xuống hàng
-    },
-
     changePasswordText: {
         color: '#fff',
         fontSize: 14,
         fontWeight: '600',
         textAlign: 'center',
         flexShrink: 1, // Ngăn text bị ép xuống dòng
+    },
+    buttonContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap', // Cho phép chia các button thành nhiều hàng
+        justifyContent: 'space-between',
+        marginVertical: 20,
+        paddingHorizontal: 16,
+    },
+    button: {
+        width: '48%', // Mỗi button chiếm khoảng 48% chiều rộng của hàng
+        paddingVertical: 14,
+        paddingHorizontal: 16,
+        borderRadius: 8,
+        marginBottom: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOpacity: 0.3,
+        shadowOffset: { width: 0, height: 2 },
+        shadowRadius: 4,
+    },
+    editButton: {
+        backgroundColor: '#4A90E2', // Xanh dương
+    },
+    changePasswordButton: {
+        backgroundColor: '#50E3C2', // Xanh lục/teal
+    },
+    orderListButton: {
+        backgroundColor: '#F5A623', // Cam
+    },
+    logoutButton: {
+        backgroundColor: '#E74C3C', // Màu đỏ nổi bật cho "Đăng xuất"
+    },
+    buttonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
+        textAlign: 'center',
     },
 });
 export default ProfileScreen;

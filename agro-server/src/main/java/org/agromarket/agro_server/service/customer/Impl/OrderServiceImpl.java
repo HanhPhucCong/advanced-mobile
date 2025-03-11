@@ -270,7 +270,7 @@ public class OrderServiceImpl implements OrderService {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     User user = (User) authentication.getPrincipal();
 
-    return orderRepository.getByUserIdAndIsActiveTrueAndIsDeletedFalse(user.getId()).stream()
+    return orderRepository.getByUserIdAndIsActiveTrue(user.getId()).stream()
         .map(orderMapper::convertToResponse)
         .toList();
   }
