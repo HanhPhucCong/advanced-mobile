@@ -1,30 +1,29 @@
 package org.agromarket.agro_server.service.admin;
+
 import org.agromarket.agro_server.model.dto.admin.InforUserDTO;
-import org.agromarket.agro_server.model.entity.Category;
-import org.agromarket.agro_server.model.entity.Order;
 import org.agromarket.agro_server.model.entity.User;
-import org.agromarket.agro_server.repositories.admin.AdminOrderRepository;
 import org.agromarket.agro_server.repositories.admin.AdminUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+
 @Service
 public class AdminUserService {
     @Autowired
     private AdminUserRepository adminUserRepository;
-    public List<InforUserDTO> getAllUser (){
+
+    public List<InforUserDTO> getAllUser() {
         List<User> users = adminUserRepository.findAll();
         List<InforUserDTO> inforUserDTOS = new ArrayList<>();
-        for (User user : users){
+        for (User user : users) {
             InforUserDTO inforUserDTO = new InforUserDTO();
             inforUserDTO.setId(user.getId());
             inforUserDTO.setEmail(user.getEmail());
             inforUserDTO.setAddress(user.getAddress());
             inforUserDTO.setFullName(user.getFullName());
-            inforUserDTO.setOrders(user.getOrdes().size());
+            inforUserDTO.setOrders(user.getOrders().size());
             inforUserDTO.setAvatarUrl(user.getAvatarUrl());
             inforUserDTO.setPhoneNumber(user.getPhoneNumber());
             inforUserDTO.setDateOfBirth(user.getDateOfBirth());
@@ -34,7 +33,8 @@ public class AdminUserService {
         }
         return inforUserDTOS;
     }
-    public InforUserDTO getUser (Long id){
+
+    public InforUserDTO getUser(Long id) {
         User user = adminUserRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("User with ID " + id + " not found."));
         InforUserDTO inforUserDTO = new InforUserDTO();
@@ -42,7 +42,7 @@ public class AdminUserService {
         inforUserDTO.setEmail(user.getEmail());
         inforUserDTO.setAddress(user.getAddress());
         inforUserDTO.setFullName(user.getFullName());
-        inforUserDTO.setOrders(user.getOrdes().size());
+        inforUserDTO.setOrders(user.getOrders().size());
         inforUserDTO.setAvatarUrl(user.getAvatarUrl());
         inforUserDTO.setPhoneNumber(user.getPhoneNumber());
         inforUserDTO.setDateOfBirth(user.getDateOfBirth());
@@ -50,6 +50,7 @@ public class AdminUserService {
         inforUserDTO.setIsDeleted(user.getIsDeleted());
         return inforUserDTO;
     }
+
     public void deleteUser(Long id) {
         User existingUser = adminUserRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("User with ID " + id + " not found."));
@@ -57,6 +58,7 @@ public class AdminUserService {
         existingUser.setIsActive(false);
         adminUserRepository.save(existingUser);
     }
+
     public void restoreUser(Long id) {
         User deletedUser = adminUserRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("User with ID " + id + " not found."));
@@ -68,6 +70,7 @@ public class AdminUserService {
             throw new IllegalStateException("User with ID " + id + " is not deleted.");
         }
     }
+
     public void delete(Long id) {
         User existingUser = adminUserRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("User with ID " + id + " not found."));
