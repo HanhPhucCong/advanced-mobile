@@ -19,6 +19,7 @@ import PaymentFailedScreen from '../screens/home/(checkout)/PaymentFailedScreen'
 import PaymentSuccessScreen from '../screens/home/(checkout)/PaymentSuccessScreen';
 import ListOrderScreen from '../screens/home/ListOrderScreen';
 import OrderScreen from '../screens/home/OrderScreen';
+import UseCoin from '../screens/home/(profile)/UseCoin';
 
 // import ListDeliveryScreen from '../screens/home/ListDeliveryScreen';
 
@@ -44,6 +45,7 @@ const MainNavigator = () => {
             <Stack.Screen name='PaymentSuccessScreen' component={PaymentSuccessScreen} />
             <Stack.Screen name='ListOrderScreen' component={ListOrderScreen} />
             <Stack.Screen name='OrderScreen' component={OrderScreen} />
+            <Stack.Screen name='UseCoin' component={UseCoin} />
         </Stack.Navigator>
     );
 };

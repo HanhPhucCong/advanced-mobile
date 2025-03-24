@@ -30,7 +30,10 @@ public class Coupon extends BaseEntity {
     private Double minimumOrderAmount = 0.0;      // giá trị đơn hàng tối thiếu
 
     @Enumerated(EnumType.STRING)
-    private CouponType type;                // loại mã giảm giá (phần trăm hay giảm trực tiếp)
+    private CouponType type;                // loại mã giảm giá (phần trăm)
+
+    @Column(nullable = false)
+    private Double discountValue;           // giá trị giảm giá (%)
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)

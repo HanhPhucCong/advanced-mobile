@@ -20,6 +20,7 @@ import { showMessage } from 'react-native-flash-message';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import productService from '../../../service/api/productService';
 import orderService from '../../../service/api/orderService';
+import couponService from '../../../service/api/couponService';
 
 interface LineItem {
     id: number;
@@ -38,6 +39,15 @@ interface Product {
     quantity: number;
 }
 
+interface Coupon {
+    id: number;
+    code: string;
+    expirationDate: string;
+    minimumOrderAmount: number;
+    type: 'PERCENTAGE' | 'FIXED_AMOUNT';
+    discountValue: number;
+}
+
 type CheckoutRouteProp = RouteProp<{ CheckoutScreen: { selectedLineItems: LineItem[] } }, 'CheckoutScreen'>;
 
 const CheckoutScreen = ({ navigation }: any) => {
@@ -51,6 +61,22 @@ const CheckoutScreen = ({ navigation }: any) => {
     const [isProcessing, setIsProcessing] = useState<boolean>(false);
     const [errors, setErrors] = useState<{ shippingAddress?: string }>({});
     const [paymentMethod, setPaymentMethod] = useState<'COD' | 'VNPay'>('COD');
+
+    const [coupons, setCoupons] = useState<Coupon[]>([]);
+    const [selectedCoupon, setSelectedCoupon] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchCoupons = async () => {
+            try {
+                const response = await couponService.myCoupons();
+                setCoupons(response.data);
+            } catch (error) {
+                console.error('Error fetching coupons:', error);
+            }
+        };
+
+        fetchCoupons();
+    }, []);
 
     useEffect(() => {
         const fetchProducts = async () => {
@@ -94,6 +120,7 @@ const CheckoutScreen = ({ navigation }: any) => {
             lineItemIds,
             shippingAddress,
             note,
+            couponCode: selectedCoupon || undefined,
         };
 
         try {
@@ -126,6 +153,16 @@ const CheckoutScreen = ({ navigation }: any) => {
             if (error.response && error.response.data) {
                 const { status, data } = error.response;
 
+                if (status === 400) {
+                    showMessage({
+                        message: data?.message || 'Yêu cầu không hợp lệ! Vui lòng kiểm tra lại thông tin.',
+                        type: 'danger',
+                        backgroundColor: '#dc3545',
+                        color: '#fff',
+                    });
+                    return;
+                }
+
                 if (status === 409) {
                     showMessage({
                         message: data?.message || 'Bạn đang xử lý một đơn hàng khác!',
@@ -151,10 +188,22 @@ const CheckoutScreen = ({ navigation }: any) => {
     };
 
     const getTotalPrice = () => {
-        return selectedLineItems.reduce((total, lineItem) => {
+        let total = selectedLineItems.reduce((sum, lineItem) => {
             const product = products.find((p) => p.id === lineItem.productId);
-            return total + (product ? product.price * lineItem.quantity : 0);
+            return sum + (product ? product.price * lineItem.quantity : 0);
         }, 0);
+
+        const appliedCoupon = coupons.find((c) => c.code === selectedCoupon);
+
+        if (appliedCoupon) {
+            if (appliedCoupon.type === 'PERCENTAGE') {
+                total -= (total * appliedCoupon.discountValue) / 100;
+            } else if (appliedCoupon.type === 'FIXED_AMOUNT') {
+                total -= appliedCoupon.discountValue;
+            }
+        }
+
+        return Math.max(total, 0); // Đảm bảo tổng tiền không âm
     };
 
     if (loading) {
@@ -206,6 +255,29 @@ const CheckoutScreen = ({ navigation }: any) => {
                                 </View>
                             );
                         })}
+
+                        {coupons.length > 0 && (
+                            <View style={styles.couponContainer}>
+                                <Text style={styles.paymentLabel}>Chọn mã giảm giá:</Text>
+                                {coupons.map((coupon) => (
+                                    <TouchableOpacity
+                                        key={coupon.id}
+                                        style={[
+                                            styles.couponItem,
+                                            selectedCoupon === coupon.code && styles.selectedCouponItem,
+                                        ]}
+                                        onPress={() =>
+                                            setSelectedCoupon(selectedCoupon === coupon.code ? null : coupon.code)
+                                        }
+                                    >
+                                        <Text style={styles.couponText}>
+                                            {coupon.code} - Giảm {coupon.discountValue}% (đơn từ{' '}
+                                            {coupon.minimumOrderAmount.toLocaleString()}đ)
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        )}
 
                         <View style={styles.totalContainer}>
                             <Text style={styles.totalLabel}>Tổng tiền:</Text>
@@ -326,9 +398,9 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         marginTop: 10,
         padding: 15,
-        backgroundColor: '#fff',
+        backgroundColor: '#ffffff',
         borderRadius: 8,
-        shadowColor: '#000',
+        shadowColor: '#63788f',
         shadowOpacity: 0.1,
         shadowOffset: { width: 0, height: 2 },
         elevation: 3,
@@ -336,11 +408,12 @@ const styles = StyleSheet.create({
     totalLabel: {
         fontSize: 18,
         fontWeight: 'bold',
+        color: '#d9534f',
     },
     totalAmount: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#d9534f',
+        color: '#ff5733',
     },
     paymentLabel: {
         fontSize: 16,
@@ -411,6 +484,33 @@ const styles = StyleSheet.create({
     },
     loading: {
         marginTop: 20,
+    },
+    couponContainer: {
+        marginTop: 4,
+        padding: 10,
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        shadowColor: '#aac0ce',
+        shadowOpacity: 0.1,
+        shadowOffset: { width: 0, height: 2 },
+        elevation: 3,
+    },
+    couponItem: {
+        padding: 12,
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 8,
+        marginTop: 8,
+        backgroundColor: '#f9f9f9',
+    },
+    selectedCouponItem: {
+        borderColor: '#419961',
+        backgroundColor: '#e5ffed',
+    },
+    couponText: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#555',
     },
 });
 
