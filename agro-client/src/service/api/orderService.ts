@@ -27,6 +27,14 @@ const orderService = {
     const url = `/api/order/cancel/${orderId}`;
     return axiosClient.put(url);
   },
+  markOrderAsReviewed(orderId: number) {
+    const url = `/api/order/mark-reviewed/${orderId}`;
+    return axiosClient.put(url);
+  },
+  checkReviewStatus(orderId: number) {
+    const url = `/api/order/check-review/${orderId}`;
+    return axiosClient.get(url);
+  },
 };
 
 export default orderService;

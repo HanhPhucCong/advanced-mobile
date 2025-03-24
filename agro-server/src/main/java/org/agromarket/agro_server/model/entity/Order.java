@@ -49,4 +49,6 @@ public class Order extends BaseEntity {
 
   @Enumerated(EnumType.STRING)
   private OrderStatus previousStatus;
+
+  private boolean hasReview = false;
 }
