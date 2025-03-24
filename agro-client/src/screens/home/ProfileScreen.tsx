@@ -20,6 +20,7 @@ type User = {
     avatarUrl?: string | null;
     role: string;
     isEmailVerified: boolean;
+    coin: number;
 };
 interface Order {
     id: number;
@@ -60,10 +61,16 @@ const ProfileScreen = ({ navigation }: any) => {
             const response = await orderService.getMyOrder();
             const ordersData: Order[] = response.data;
             setOrders(ordersData.length);
-            const count = ordersData.filter((order: Order) => order.status === "PENDING" || order.status === "CONFIRMED" || order.status === "PROCESSING" || order.status === "SHIPPING").length;
+            const count = ordersData.filter(
+                (order: Order) =>
+                    order.status === 'PENDING' ||
+                    order.status === 'CONFIRMED' ||
+                    order.status === 'PROCESSING' ||
+                    order.status === 'SHIPPING'
+            ).length;
             setDeliveredCount(count);
         } catch (error) {
-            console.error("Error fetching orders:", error);
+            console.error('Error fetching orders:', error);
         } finally {
             setLoading(false);
         }
@@ -126,7 +133,16 @@ const ProfileScreen = ({ navigation }: any) => {
                             label='Tổng số đơn hàng'
                             value={orders !== undefined ? orders.toString() : 'Chưa có'}
                         />
-
+                        <View style={styles.coinContainer}>
+                            <Text style={styles.infoLabel}>Số xu hiện có:</Text>
+                            <Text style={styles.infoCoin}>{userData.coin?.toLocaleString() || '0'} xu</Text>
+                            <TouchableOpacity
+                                style={styles.useCoinButton}
+                                onPress={() => navigation.navigate('UseCoin', { currentCoin: userData.coin })}
+                            >
+                                <Text style={styles.useCoinText}>Sử dụng xu</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
                     <View style={styles.buttonContainer}>
                         <TouchableOpacity
@@ -145,17 +161,12 @@ const ProfileScreen = ({ navigation }: any) => {
                             style={[styles.button, styles.orderListButton]}
                             onPress={() => navigation.navigate('ListOrderScreen', { userData })}
                         >
-                            <Text style={styles.buttonText}>Danh sách đơn hàng</Text>
+                            <Text style={styles.buttonText}>Đơn hàng</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.button, styles.logoutButton]}
-                            onPress={handleLogout}
-                        >
+                        <TouchableOpacity style={[styles.button, styles.logoutButton]} onPress={handleLogout}>
                             <Text style={styles.buttonText}>Đăng xuất</Text>
                         </TouchableOpacity>
                     </View>
-
-
                 </View>
             ) : (
                 <TouchableOpacity>
@@ -163,14 +174,13 @@ const ProfileScreen = ({ navigation }: any) => {
                     <Button title='Đăng xuất' onPress={handleLogout} />
                 </TouchableOpacity>
             )}
-
         </ScrollView>
     );
 };
 
 type InfoRowProps = {
     label: string;
-    value: string;
+    value: string | number;
 };
 
 const InfoRow: React.FC<InfoRowProps> = ({ label, value }) => (
@@ -181,7 +191,14 @@ const InfoRow: React.FC<InfoRowProps> = ({ label, value }) => (
 );
 
 const styles = StyleSheet.create({
-    container: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: 20, backgroundColor: '#fff' },
+    container: {
+        flexGrow: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+        backgroundColor: '#fff',
+        top: 20,
+    },
     profileCard: { width: '100%', maxWidth: 400, alignItems: 'center', padding: 20 },
     avatar: { width: 120, height: 120, borderRadius: 60, marginBottom: 15 },
     name: { fontSize: 26, fontWeight: '600', color: '#222', marginBottom: 5 },
@@ -215,13 +232,13 @@ const styles = StyleSheet.create({
     },
     buttonContainer: {
         flexDirection: 'row',
-        flexWrap: 'wrap', // Cho phép chia các button thành nhiều hàng
+        flexWrap: 'wrap',
         justifyContent: 'space-between',
         marginVertical: 20,
         paddingHorizontal: 16,
     },
     button: {
-        width: '48%', // Mỗi button chiếm khoảng 48% chiều rộng của hàng
+        width: '48%',
         paddingVertical: 14,
         paddingHorizontal: 16,
         borderRadius: 8,
@@ -235,22 +252,59 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
     },
     editButton: {
-        backgroundColor: '#4A90E2', // Xanh dương
+        backgroundColor: '#4A90E2',
     },
     changePasswordButton: {
-        backgroundColor: '#50E3C2', // Xanh lục/teal
+        backgroundColor: '#50E3C2',
     },
     orderListButton: {
-        backgroundColor: '#F5A623', // Cam
+        backgroundColor: '#F5A623',
     },
     logoutButton: {
-        backgroundColor: '#E74C3C', // Màu đỏ nổi bật cho "Đăng xuất"
+        backgroundColor: '#E74C3C',
     },
     buttonText: {
         color: '#fff',
         fontSize: 16,
         fontWeight: 'bold',
         textAlign: 'center',
+    },
+    infoCoin: {
+        fontSize: 16,
+        fontWeight: '500',
+        color: '#7f8c8d',
+        textAlign: 'right',
+    },
+
+    coinContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 8,
+        borderBottomWidth: 0.5,
+        borderBottomColor: '#eee',
+    },
+
+    useCoinButton: {
+        marginTop: 6,
+        backgroundColor: '#ecf0f1',
+        paddingVertical: 6,
+        paddingHorizontal: 14,
+        borderRadius: 12,
+        alignItems: 'center',
+        flexDirection: 'row',
+        gap: 6,
+        shadowColor: '#000',
+        shadowOpacity: 0.05,
+        shadowOffset: { width: 0, height: 1 },
+        shadowRadius: 2,
+        elevation: 1,
+    },
+
+    useCoinText: {
+        fontSize: 14,
+        fontWeight: '500',
+        color: '#2c3e50',
     },
 });
 export default ProfileScreen;

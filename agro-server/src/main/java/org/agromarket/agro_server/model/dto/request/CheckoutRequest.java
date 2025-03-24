@@ -12,14 +12,16 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class CheckoutRequest {
-  @NotBlank(message = "List line items must be not null!")
-  private String lineItemIds;
+    @NotBlank(message = "List line items must be not null!")
+    private String lineItemIds;
 
-  @NotBlank(message = "Shipping address must be not null!")
-  @Size(min = 0, max = 255, message = "Shipping address must be between 0 to 255 characters!")
-  private String shippingAddress;
+    @NotBlank(message = "Shipping address must be not null!")
+    @Size(min = 0, max = 255, message = "Shipping address must be between 0 to 255 characters!")
+    private String shippingAddress;
 
-  private String note;
+    private String note;
+
+    private String couponCode;  // mã giảm giá: có thể có hoặc không
 }
 
 /*
