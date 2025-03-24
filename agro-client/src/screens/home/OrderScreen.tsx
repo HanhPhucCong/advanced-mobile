@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -54,10 +55,13 @@ const OrderDetailScreen = ({ navigation, route }: any) => {
   const [order, setOrder] = useState<Order | null>(null);
   const [products, setProducts] = useState<{ [key: number]: Product }>({});
   const [loading, setLoading] = useState<boolean>(false);
+  const [hasReview, setHasReview] = useState<boolean>(false);
 
   const fetchOrderDetail = async () => {
     setLoading(true);
     try {
+      const hasReview = await orderService.checkReviewStatus(orderId);
+      setHasReview(hasReview.data);
       const response = await orderService.getOrderById(orderId);
       const orderData: Order = response.data;
       setOrder(orderData);
@@ -84,11 +88,15 @@ const OrderDetailScreen = ({ navigation, route }: any) => {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     fetchOrderDetail();
   }, []);
-
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchOrderDetail();
+    }, [])
+  );
+  
   const formatDate = (dateString?: string) => {
     if (!dateString) return '';
     const [year, month, day] = dateString.split('T')[0].split('-').map(Number);
@@ -192,6 +200,19 @@ const OrderDetailScreen = ({ navigation, route }: any) => {
               {order.status}
             </Text>
           </View>
+          {order.status === 'DELIVERED' && (
+            !hasReview ? (
+              <TouchableOpacity
+                style={styles.reviewButton}
+                onPress={() => navigation.navigate('ReviewScreen', { lineItems: order.lineItems, orderId: order.id })}
+              >
+                <Text style={styles.reviewButtonText}>Review</Text>
+              </TouchableOpacity>
+            ) : (
+              <Text style={styles.reviewedText}>Đơn hàng đã được review</Text>
+            )
+          )}
+
           <Text style={styles.sectionTitle}>Sản phẩm</Text>
           {order.lineItems.map(renderLineItem)}
           {canCancelOrder(order) && (
@@ -310,7 +331,28 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold'
-  }
+  },
+  reviewButton: {
+    backgroundColor: '#1E90FF',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 4,
+    marginTop: 8,
+    alignSelf: 'flex-start',
+  },
+  reviewButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  reviewedText: {
+    fontSize: 16,
+    color: '#32CD32',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: 10,
+  },
+
 });
 
 export default OrderDetailScreen;

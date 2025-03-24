@@ -95,4 +95,17 @@ public class OrderController {
             200,
             orderService.getAllCancelRequest()));
   }
+  @PreAuthorize("hasAnyAuthority('ADMIN', 'CUSTOMER')")
+  @PutMapping("/mark-reviewed/{orderId}")
+  public ResponseEntity<BaseResponse> markOrderAsReviewed(@PathVariable("orderId") long orderId) {
+    return ResponseEntity.ok(
+            new BaseResponse("Order marked as reviewed successfully!", 200, orderService.markOrderAsReviewed(orderId))
+    );
+  }
+  @PreAuthorize("hasAnyAuthority('ADMIN', 'CUSTOMER')")
+  @GetMapping("/check-review/{orderId}")
+  public ResponseEntity<BaseResponse> checkOrderReviewStatus(@PathVariable("orderId") long orderId) {
+    boolean hasReview = orderService.checkHasReview(orderId);
+    return ResponseEntity.ok(new BaseResponse("Review status retrieved successfully!", 200, hasReview));
+  }
 }

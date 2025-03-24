@@ -12,6 +12,7 @@ import org.agromarket.agro_server.model.entity.Review;
 import org.agromarket.agro_server.model.entity.User;
 import org.agromarket.agro_server.repositories.customer.ProductRepository;
 import org.agromarket.agro_server.repositories.customer.ReviewRepository;
+import org.agromarket.agro_server.repositories.customer.UserRepository;
 import org.agromarket.agro_server.service.customer.ReviewService;
 import org.agromarket.agro_server.util.mapper.ReviewMapper;
 import org.springframework.data.domain.Pageable;
@@ -26,6 +27,7 @@ public class ReviewServiceImpl implements ReviewService {
   private final ReviewRepository reviewRepository;
   private final ProductRepository productRepository;
   private final ReviewMapper reviewMapper;
+  private final UserRepository userRepository;
 
   @Override
   public ReviewResponse createReview(Long productId, ReviewRequest request) {
@@ -37,10 +39,12 @@ public class ReviewServiceImpl implements ReviewService {
       throw new NotFoundException("Product not found!");
     }
 
-    List<Review> existedReviewByUser = reviewRepository.getAllByUser(currUser.getId());
-    if (!existedReviewByUser.isEmpty()) {
-      throw new CustomException("You can only add 1 review in 1 product!", 409);
-    }
+//    List<Review> existedReviewByUser = reviewRepository.getAllByUser(currUser.getId());
+//    if (!existedReviewByUser.isEmpty()) {
+//      throw new CustomException("You can only add 1 review in 1 product!", 409);
+//    }
+    currUser.setCoin(currUser.getCoin() + 10);
+    userRepository.save(currUser);
 
     Review review = new Review();
     review.setProduct(product);

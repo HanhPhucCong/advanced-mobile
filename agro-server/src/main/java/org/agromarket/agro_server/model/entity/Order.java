@@ -54,4 +54,9 @@ public class Order extends BaseEntity {
     @ManyToOne
     @JoinColumn(name = "coupon_id", nullable = true)
     private Coupon coupon;
+  
+    @Enumerated(EnumType.STRING)
+    private OrderStatus previousStatus;
+
+    private boolean hasReview = false;
 }
