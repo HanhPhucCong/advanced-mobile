@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/AntDesign';
@@ -6,6 +6,7 @@ import formatCurrency from '../../utils/formatCurrency';
 import cartService from '../../service/api/cartService';
 import favoriteService from '../../service/api/favoriteService';
 import { showMessage, hideMessage } from 'react-native-flash-message';
+import reviewService from '../../service/api/reviewService';
 
 // lấy chiều rộng màn hình để làm slideshow, css các kiểu
 const { width } = Dimensions.get('window');
@@ -19,6 +20,17 @@ interface Product {
     imageUrls: string[];
     quantity: number;
 }
+interface Review {
+    id: number;
+    createdAt: string;
+    updatedAt: string;
+    isActive: boolean;
+    isDeleted: boolean;
+    ownerId: number;
+    productId: number;
+    star: number;
+    comment: string;
+}
 
 type ProductDetailRouteProp = RouteProp<{ ProductDetail: { product: Product } }, 'ProductDetail'>;
 
@@ -26,15 +38,32 @@ const ProductDetailScreen = () => {
     const route = useRoute<ProductDetailRouteProp>();
     const { product } = route.params;
     const navigation = useNavigation();
-
+    const [reviews, setReviews] = useState<Review[]>([]);
     const [activeSlide, setActiveSlide] = useState(0);
+    const [showAllReviews, setShowAllReviews] = useState(false);
+    const displayedReviews = showAllReviews ? reviews : reviews.slice(0, 2);
 
+    useEffect(() => {
+        const fetchReviews = async () => {
+            try {
+                const response = await reviewService.getAllReviewByProductId(product.id);
+                setReviews(response.data);
+            } catch (error) {
+                console.error('Failed to fetch reviews:', error);
+            }
+        };
+        fetchReviews();
+    }, [product.id]);
     // event.nativeEvent.contentOffset.x: toạ đọ X hiện tại
     const handleScroll = (event: any) => {
         const slideIndex = Math.round(event.nativeEvent.contentOffset.x / width);
         setActiveSlide(slideIndex);
     };
-
+    const reviewCount = reviews.length;
+    const avgRating =
+        reviewCount > 0
+            ? reviews.reduce((sum, review) => sum + review.star, 0) / reviewCount
+            : 0;
     const handleAddToCart = async () => {
         if (product.quantity === 0) {
             showMessage({
@@ -112,6 +141,11 @@ const ProductDetailScreen = () => {
                 <Text style={styles.price}>
                     {formatCurrency(product.price)} <Text style={styles.unit}>/ {product.unit}</Text>
                 </Text>
+                <View style={styles.ratingContainer}>
+                    <Text style={styles.ratingText}>
+                        Rating: {avgRating.toFixed(1)} ({reviewCount} reviews)
+                    </Text>
+                </View>
                 <Text style={[styles.quantity, product.quantity === 0 && styles.outOfStock]}>
                     {product.quantity > 0 ? `In Stock: ${product.quantity}` : 'Out of stock'}
                 </Text>
@@ -133,6 +167,27 @@ const ProductDetailScreen = () => {
                     <Text style={styles.buttonTextWhite}>Add to Cart</Text>
                 </TouchableOpacity>
             </View>
+            <View style={styles.reviewContainer}>
+                <Text style={styles.reviewTitle}>Reviews</Text>
+                {reviews.length > 0 ? (
+                    displayedReviews.map(review => (
+                        <View key={review.id} style={styles.reviewItem}>
+                            <Text style={styles.reviewStar}>Rating: {review.star}</Text>
+                            <Text style={styles.reviewComment}>{review.comment}</Text>
+                        </View>
+                    ))
+                ) : (
+                    <Text style={styles.noReview}>No reviews yet.</Text>
+                )}
+                {reviews.length > 2 && (
+                    <TouchableOpacity onPress={() => setShowAllReviews(!showAllReviews)}>
+                        <Text style={styles.viewMore}>
+                            {showAllReviews ? 'View Less' : 'View More'}
+                        </Text>
+                    </TouchableOpacity>
+                )}
+            </View>
+
         </ScrollView>
     );
 };
@@ -181,6 +236,50 @@ const styles = StyleSheet.create({
     quantity: { fontSize: 14, color: '#555', marginBottom: 10 },
     outOfStock: { color: '#dc3545', fontWeight: 'bold' },
     disabledButton: { backgroundColor: '#ccc' },
+    reviewContainer: {
+        paddingHorizontal: 16,
+        marginTop: 20,
+    },
+    reviewTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 10,
+    },
+    reviewItem: {
+        borderWidth: 1,
+        borderColor: '#ddd',
+        padding: 10,
+        borderRadius: 8,
+        marginBottom: 10,
+    },
+    reviewStar: {
+        fontSize: 16,
+        color: '#ff5733',
+        marginBottom: 5,
+    },
+    reviewComment: {
+        fontSize: 16,
+        color: '#555',
+    },
+    noReview: {
+        fontSize: 16,
+        color: '#777',
+        fontStyle: 'italic',
+    },
+    ratingContainer: {
+        marginBottom: 10,
+    },
+    ratingText: {
+        fontSize: 16,
+        color: '#ff5733',
+        fontWeight: 'bold',
+    },
+    viewMore: {
+        fontSize: 16,
+        color: '#007bff',
+        textAlign: 'center',
+        marginTop: 10,
+    },
 });
 
 export default ProductDetailScreen;

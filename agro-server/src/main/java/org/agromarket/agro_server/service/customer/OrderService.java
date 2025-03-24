@@ -35,4 +35,7 @@ public interface OrderService {
   public List<OrderResponse> getAllStatus_NotDelete();
 
   public List<OrderResponse> getAllCancelRequest();
+  public OrderResponse markOrderAsReviewed(long orderId);
+  public boolean checkHasReview(long orderId);
+
 }
