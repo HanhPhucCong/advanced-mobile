@@ -43,7 +43,7 @@ public class ReviewServiceImpl implements ReviewService {
 //    if (!existedReviewByUser.isEmpty()) {
 //      throw new CustomException("You can only add 1 review in 1 product!", 409);
 //    }
-    currUser.setCoin(currUser.getCoin() + 10);
+    currUser.setCoin(currUser.getCoin() + 1000);
     userRepository.save(currUser);
 
     Review review = new Review();

@@ -7,6 +7,7 @@ import cartService from '../../service/api/cartService';
 import favoriteService from '../../service/api/favoriteService';
 import { showMessage, hideMessage } from 'react-native-flash-message';
 import reviewService from '../../service/api/reviewService';
+import Iconcc from 'react-native-vector-icons/FontAwesome';
 
 // lấy chiều rộng màn hình để làm slideshow, css các kiểu
 const { width } = Dimensions.get('window');
@@ -172,7 +173,15 @@ const ProductDetailScreen = () => {
                 {reviews.length > 0 ? (
                     displayedReviews.map(review => (
                         <View key={review.id} style={styles.reviewItem}>
-                            <Text style={styles.reviewStar}>Rating: {review.star}</Text>
+                            <View style={styles.reviewHeader}>
+                                <Iconcc name="user-circle" size={30} color="#555" style={styles.userIcon} />
+                                <Text style={styles.reviewStar}>
+                                    {Array(5)
+                                        .fill(0)
+                                        .map((_, index) => (index < review.star ? '★' : '☆'))
+                                        .join('')}
+                                </Text>
+                            </View>
                             <Text style={styles.reviewComment}>{review.comment}</Text>
                         </View>
                     ))
@@ -187,7 +196,6 @@ const ProductDetailScreen = () => {
                     </TouchableOpacity>
                 )}
             </View>
-
         </ScrollView>
     );
 };
@@ -236,36 +244,6 @@ const styles = StyleSheet.create({
     quantity: { fontSize: 14, color: '#555', marginBottom: 10 },
     outOfStock: { color: '#dc3545', fontWeight: 'bold' },
     disabledButton: { backgroundColor: '#ccc' },
-    reviewContainer: {
-        paddingHorizontal: 16,
-        marginTop: 20,
-    },
-    reviewTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginBottom: 10,
-    },
-    reviewItem: {
-        borderWidth: 1,
-        borderColor: '#ddd',
-        padding: 10,
-        borderRadius: 8,
-        marginBottom: 10,
-    },
-    reviewStar: {
-        fontSize: 16,
-        color: '#ff5733',
-        marginBottom: 5,
-    },
-    reviewComment: {
-        fontSize: 16,
-        color: '#555',
-    },
-    noReview: {
-        fontSize: 16,
-        color: '#777',
-        fontStyle: 'italic',
-    },
     ratingContainer: {
         marginBottom: 10,
     },
@@ -274,11 +252,54 @@ const styles = StyleSheet.create({
         color: '#ff5733',
         fontWeight: 'bold',
     },
-    viewMore: {
+    reviewContainer: {
+        padding: 16,
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        marginBottom: 16,
+        shadowColor: '#000',
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+    reviewTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 12,
+    },
+    reviewItem: {
+        marginBottom: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+        paddingBottom: 12,
+    },
+    reviewHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    userIcon: {
+        marginRight: 8,
+    },
+    reviewStar: {
         fontSize: 16,
-        color: '#007bff',
+        color: '#FFD700',
+    },
+    reviewComment: {
+        fontSize: 14,
+        color: '#333',
+        marginLeft: 38,
+    },
+    noReview: {
+        fontSize: 14,
+        color: '#666',
+        fontStyle: 'italic',
+    },
+    viewMore: {
+        fontSize: 14,
+        color: '#007BFF',
         textAlign: 'center',
-        marginTop: 10,
+        marginTop: 8,
     },
 });
 
