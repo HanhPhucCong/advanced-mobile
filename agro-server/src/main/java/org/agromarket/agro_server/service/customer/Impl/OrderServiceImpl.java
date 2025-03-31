@@ -156,9 +156,10 @@ public class OrderServiceImpl implements OrderService {
         for (LineItem lineItem : lineItems) {
             lineItem.setOrder(order);
 
-            // tru quantity san pham
+            // tru quantity san pham va cong them so luoc mua
             Product product = lineItem.getProduct();
             product.setQuantity(product.getQuantity() - lineItem.getQuantity());
+            product.setPurchaseCount(product.getPurchaseCount() + lineItem.getQuantity());
             productToSave.add(product);
         }
         OrderResponse orderResponse = orderMapper.convertToResponse(orderRepository.save(order));
