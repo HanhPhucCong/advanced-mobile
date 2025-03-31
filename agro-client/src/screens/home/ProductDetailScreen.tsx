@@ -16,6 +16,7 @@ interface Product {
     id: number;
     name: string;
     description: string;
+    purchaseCount: number,
     price: number;
     unit: string;
     imageUrls: string[];
@@ -149,6 +150,9 @@ const ProductDetailScreen = () => {
                 </View>
                 <Text style={[styles.quantity, product.quantity === 0 && styles.outOfStock]}>
                     {product.quantity > 0 ? `In Stock: ${product.quantity}` : 'Out of stock'}
+                </Text>
+                <Text style={styles.purchaseCount}>
+                    Purchased: {product.purchaseCount}
                 </Text>
                 <Text style={styles.description}>{product.description}</Text>
             </View>
@@ -300,6 +304,10 @@ const styles = StyleSheet.create({
         color: '#007BFF',
         textAlign: 'center',
         marginTop: 8,
+    },
+    purchaseCount: {
+        fontSize: 15,
+        color: 'black',
     },
 });
 

@@ -36,6 +36,9 @@ public class Product extends BaseEntity {
   @Column(nullable = false)
   private long quantity;
 
+  @Column(nullable = false)
+  private Long purchaseCount = 0L;
+
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
   private Unit unit;

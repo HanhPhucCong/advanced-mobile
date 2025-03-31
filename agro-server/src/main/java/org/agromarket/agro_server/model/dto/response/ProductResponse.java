@@ -14,6 +14,7 @@ public class ProductResponse extends BaseResponseDTO {
   private Double price;
   private Long quantity;
   private Unit unit;
+  private Long purchaseCount;
   private Long categoryId;
   private List<String> imageUrls;
   private List<Long> reviewIds;
