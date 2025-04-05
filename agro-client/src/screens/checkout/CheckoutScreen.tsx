@@ -18,9 +18,9 @@ import { RadioButton } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/AntDesign';
 import { showMessage } from 'react-native-flash-message';
 import { RouteProp, useRoute } from '@react-navigation/native';
-import productService from '../../../service/api/productService';
-import orderService from '../../../service/api/orderService';
-import couponService from '../../../service/api/couponService';
+import productService from '../../service/api/productService';
+import orderService from '../../service/api/orderService';
+import couponService from '../../service/api/couponService';
 
 interface LineItem {
     id: number;

@@ -2,9 +2,9 @@ import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, Image, ActivityIndicator, StyleSheet, ScrollView, TouchableOpacity, Button } from 'react-native';
-import profileService from '../../service/api/profileService';
-import authService from '../../service/api/authService';
-import orderService from '../../service/api/orderService';
+import profileService from '../../../service/api/profileService';
+import authService from '../../../service/api/authService';
+import orderService from '../../../service/api/orderService';
 
 type User = {
     id: number;
@@ -125,10 +125,10 @@ const ProfileScreen = ({ navigation }: any) => {
                         <InfoRow label='Số điện thoại' value={userData.phoneNumber || 'Chưa cập nhật'} />
                         <InfoRow label='Địa chỉ' value={userData.address || 'Chưa cập nhật'} />
                         <InfoRow label='Ngày sinh' value={formatDate(userData.dateOfBirth) || 'Chưa cập nhật'} />
-                        <InfoRow
+                        {/* <InfoRow
                             label='Đơn hàng đang vận chuyển'
                             value={deliveredCount !== undefined ? deliveredCount.toString() : 'Chưa có'}
-                        />
+                        /> */}
                         <InfoRow
                             label='Tổng số đơn hàng'
                             value={orders !== undefined ? orders.toString() : 'Chưa có'}

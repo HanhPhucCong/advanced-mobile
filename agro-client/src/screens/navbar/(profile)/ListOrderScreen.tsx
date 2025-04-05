@@ -10,10 +10,10 @@ import {
     SafeAreaView,
     ScrollView,
 } from 'react-native';
-import orderService from '../../service/api/orderService';
-import productService from '../../service/api/productService';
+import orderService from '../../../service/api/orderService';
+import productService from '../../../service/api/productService';
 import Icon from 'react-native-vector-icons/AntDesign';
-import couponService from '../../service/api/couponService';
+import couponService from '../../../service/api/couponService';
 
 interface LineItem {
     id: number;
@@ -156,6 +156,8 @@ const ListOrderScreen = ({ navigation }: any) => {
     };
 
     const filteredOrders = selectedStatus ? orders.filter((order) => order.status === selectedStatus) : orders;
+    const totalRevenue = filteredOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+    const totalOrders = filteredOrders.length;
     const renderOrder = ({ item }: { item: Order }) => {
         const displayedLineItems = item.lineItems.slice(0, 1);
         const remainingCount = item.lineItems.length - displayedLineItems.length;
@@ -246,12 +248,26 @@ const ListOrderScreen = ({ navigation }: any) => {
                 ) : filteredOrders.length === 0 ? (
                     <Text style={styles.emptyText}>Không có đơn hàng nào.</Text>
                 ) : (
-                    <FlatList
-                        data={filteredOrders}
-                        keyExtractor={(item) => item.id.toString()}
-                        renderItem={renderOrder}
-                        contentContainerStyle={styles.flatListContent}
-                    />
+                    <>
+                        <View style={styles.summaryContainer}>
+                            {/* <Text style={styles.summaryTitle}>Thống kê đơn hàng</Text> */}
+                            <View style={styles.summaryRow}>
+                                <Text style={styles.summaryLabel}>Tổng số đơn hàng:</Text>
+                                <Text style={styles.summaryValue}>{totalOrders}</Text>
+                            </View>
+                            <View style={styles.summaryRow}>
+                                <Text style={styles.summaryLabel}>Tổng số tiền:</Text>
+                                <Text style={styles.summaryValue}>{totalRevenue.toLocaleString()}đ</Text>
+                            </View>
+                        </View>
+
+                        <FlatList
+                            data={filteredOrders}
+                            keyExtractor={(item) => item.id.toString()}
+                            renderItem={renderOrder}
+                            contentContainerStyle={styles.flatListContent}
+                        />
+                    </>
                 )}
             </View>
         </SafeAreaView>
@@ -393,12 +409,48 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         fontSize: 14,
         fontWeight: 'bold',
-        color: '#D32F2F', // Màu đỏ nổi bật
-        backgroundColor: 'rgba(255, 0, 0, 0.1)', // Nền đỏ nhạt
+        color: '#D32F2F',
+        backgroundColor: 'rgba(255, 0, 0, 0.1)',
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: 'rgba(255, 0, 0, 0.3)', // Viền đỏ mờ
+        borderColor: 'rgba(255, 0, 0, 0.3)',
         textAlign: 'center',
+    },
+    summaryContainer: {
+        backgroundColor: '#f9f9f9',
+        padding: 16,
+        borderRadius: 12,
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: '#8cabb8',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+    summaryTitle: {
+        fontSize: 17,
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: 10,
+        textAlign: 'center',
+    },
+    summaryRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingVertical: 6,
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+    },
+    summaryLabel: {
+        fontSize: 14,
+        color: '#555',
+    },
+    summaryValue: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#222',
     },
 });
 
