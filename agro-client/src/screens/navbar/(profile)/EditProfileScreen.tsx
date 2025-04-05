@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { showMessage } from 'react-native-flash-message';
 import * as ImagePicker from 'expo-image-picker';
-import profileService from '../../service/api/profileService';
+import profileService from '../../../service/api/profileService';
 import Icon from 'react-native-vector-icons/AntDesign';
 import mime from 'react-native-mime-types';
 

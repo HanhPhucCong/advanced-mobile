@@ -7,17 +7,17 @@ import SignupScreen from '../screens/auth/SignupScreen';
 import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
 import ResetPasswordScreen from '../screens/auth/ResetPasswordScreen';
 import OtpVerificationScreen from '../screens/auth/OtpVerificationScreen';
-import EditProfileScreen from '../screens/home/EditProfileScreen';
+import EditProfileScreen from '../screens/navbar/(profile)/EditProfileScreen';
 import ProductDetailScreen from '../screens/home/ProductDetailScreen';
-import ChangePasswordScreen from '../screens/home/ChangePasswordScreen';
-import CartScreen from '../screens/home/CartScreen';
-import FavoriteScreen from '../screens/home/FavoriteScreen';
+import ChangePasswordScreen from '../screens/navbar/(profile)/ChangePasswordScreen';
+import CartScreen from '../screens/navbar/CartScreen';
+import FavoriteScreen from '../screens/navbar/FavoriteScreen';
 import ProductForCategoryScreen from '../screens/home/ProductForCategoryScreen';
-import CheckoutScreen from '../screens/home/(checkout)/CheckoutScreen';
-import VnpayScreen from '../screens/home/(checkout)/VnpayScreen';
-import PaymentFailedScreen from '../screens/home/(checkout)/PaymentFailedScreen';
-import PaymentSuccessScreen from '../screens/home/(checkout)/PaymentSuccessScreen';
-import UseCoin from '../screens/home/(profile)/UseCoin';
+import CheckoutScreen from '../screens/checkout/CheckoutScreen';
+import VnpayScreen from '../screens/checkout/VnpayScreen';
+import PaymentFailedScreen from '../screens/checkout/PaymentFailedScreen';
+import PaymentSuccessScreen from '../screens/checkout/PaymentSuccessScreen';
+import UseCoin from '../screens/navbar/(profile)/UseCoin';
 
 const AuthNavigator = () => {
     const Stack = createNativeStackNavigator();

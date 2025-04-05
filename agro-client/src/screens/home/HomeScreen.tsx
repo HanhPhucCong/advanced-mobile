@@ -133,10 +133,12 @@ const HomeScreen = ({ navigation }: any) => {
     const renderCategoryItem = ({ item }: { item: Category }) => (
         <TouchableOpacity
             style={styles.categoryItem}
-            onPress={() => navigation.navigate('ProductForCategoryScreen', { 
-                categoryId: item.id, 
-                categoryName: item.name 
-            })}
+            onPress={() =>
+                navigation.navigate('ProductForCategoryScreen', {
+                    categoryId: item.id,
+                    categoryName: item.name,
+                })
+            }
         >
             <Text style={styles.categoryText}>{item.name}</Text>
         </TouchableOpacity>

@@ -74,10 +74,10 @@ const SearchScreen = ({ navigation }: any) => {
     return (
         <View style={styles.container}>
             <View style={styles.searchContainer}>
-                <Ionicons name="search" size={20} color="gray" style={styles.searchIcon} />
+                <Ionicons name='search' size={20} color='gray' style={styles.searchIcon} />
                 <TextInput
                     style={styles.searchInput}
-                    placeholder="Nhập từ khóa tìm kiếm..."
+                    placeholder='Nhập từ khóa tìm kiếm...'
                     value={searchQuery}
                     onChangeText={handleSearch}
                 />
@@ -90,14 +90,14 @@ const SearchScreen = ({ navigation }: any) => {
                         style={styles.picker}
                         onValueChange={(itemValue) => handleSortChange(itemValue)}
                     >
-                        <Picker.Item label="Mặc định" value="default" />
-                        <Picker.Item label="Giá: Thấp đến cao" value="asc" />
-                        <Picker.Item label="Giá: Cao đến thấp" value="desc" />
+                        <Picker.Item label='Mặc định' value='default' />
+                        <Picker.Item label='Giá: Thấp đến cao' value='asc' />
+                        <Picker.Item label='Giá: Cao đến thấp' value='desc' />
                     </Picker>
                 </View>
             )}
             {loading ? (
-                <ActivityIndicator size="large" color="#ff5733" />
+                <ActivityIndicator size='large' color='#ff5733' />
             ) : (
                 <FlatList
                     data={isSearching ? results : randomProducts}
@@ -105,7 +105,10 @@ const SearchScreen = ({ navigation }: any) => {
                     numColumns={2}
                     ListEmptyComponent={<Text style={styles.noResults}>Không có kết quả.</Text>}
                     renderItem={({ item }) => (
-                        <TouchableOpacity style={styles.productItem} onPress={() => navigation.navigate('ProductDetailScreen', { product: item })}>
+                        <TouchableOpacity
+                            style={styles.productItem}
+                            onPress={() => navigation.navigate('ProductDetailScreen', { product: item })}
+                        >
                             <Image source={{ uri: item.imageUrls[0] }} style={styles.productImage} />
                             <Text style={styles.productName}>{item.name}</Text>
                             <Text style={styles.productPrice}>${item.price.toFixed(2)}</Text>
@@ -119,17 +122,39 @@ const SearchScreen = ({ navigation }: any) => {
 
 const styles = StyleSheet.create({
     container: { flex: 1, paddingTop: 50, paddingHorizontal: 20, backgroundColor: '#fff' },
-    searchContainer: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#ccc', borderRadius: 8, paddingHorizontal: 15, height: 50, marginBottom: 15, backgroundColor: '#f8f8f8', elevation: 2 },
+    searchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 8,
+        paddingHorizontal: 15,
+        height: 50,
+        marginBottom: 15,
+        backgroundColor: '#f8f8f8',
+        elevation: 2,
+    },
     searchIcon: { marginRight: 10 },
     searchInput: { flex: 1, fontSize: 16 },
     pickerContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 15 },
     pickerLabel: { fontSize: 16, marginRight: 10 },
     picker: { flex: 1, height: 50 },
-    productItem: { flex: 1, alignItems: 'center', padding: 10, margin: 5, borderRadius: 10, backgroundColor: '#f9f9f9', shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 5, elevation: 3 },
+    productItem: {
+        flex: 1,
+        alignItems: 'center',
+        padding: 10,
+        margin: 5,
+        borderRadius: 10,
+        backgroundColor: '#f9f9f9',
+        shadowColor: '#000',
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+        elevation: 3,
+    },
     productImage: { width: 100, height: 100, borderRadius: 10 },
     productName: { fontSize: 16, fontWeight: 'bold', marginTop: 5 },
     productPrice: { fontSize: 14, color: 'green', marginTop: 3 },
-    noResults: { textAlign: 'center', marginTop: 20, fontSize: 16, color: 'gray' }
+    noResults: { textAlign: 'center', marginTop: 20, fontSize: 16, color: 'gray' },
 });
 
 export default SearchScreen;

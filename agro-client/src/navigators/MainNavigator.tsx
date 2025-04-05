@@ -1,26 +1,26 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 import TabNavigator from './TabNavigator';
-import EditProfileScreen from '../screens/home/EditProfileScreen';
+import EditProfileScreen from '../screens/navbar/(profile)/EditProfileScreen';
 import ProductDetailScreen from '../screens/home/ProductDetailScreen';
 import { LoginScreen } from '../screens';
-import ChangePasswordScreen from '../screens/home/ChangePasswordScreen';
+import ChangePasswordScreen from '../screens/navbar/(profile)/ChangePasswordScreen';
 const Stack = createNativeStackNavigator();
 import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
 import ResetPasswordScreen from '../screens/auth/ResetPasswordScreen';
 import OtpVerificationScreen from '../screens/auth/OtpVerificationScreen';
 import SignupScreen from '../screens/auth/SignupScreen';
-import CartScreen from '../screens/home/CartScreen';
-import FavoriteScreen from '../screens/home/FavoriteScreen';
+import CartScreen from '../screens/navbar/CartScreen';
+import FavoriteScreen from '../screens/navbar/FavoriteScreen';
 import ProductForCategoryScreen from '../screens/home/ProductForCategoryScreen';
-import CheckoutScreen from '../screens/home/(checkout)/CheckoutScreen';
-import VnpayScreen from '../screens/home/(checkout)/VnpayScreen';
-import PaymentFailedScreen from '../screens/home/(checkout)/PaymentFailedScreen';
-import PaymentSuccessScreen from '../screens/home/(checkout)/PaymentSuccessScreen';
-import ListOrderScreen from '../screens/home/ListOrderScreen';
-import OrderScreen from '../screens/home/OrderScreen';
-import UseCoin from '../screens/home/(profile)/UseCoin';
-import ReviewScreen from '../screens/home/ReviewScreen';
+import CheckoutScreen from '../screens/checkout/CheckoutScreen';
+import VnpayScreen from '../screens/checkout/VnpayScreen';
+import PaymentFailedScreen from '../screens/checkout/PaymentFailedScreen';
+import PaymentSuccessScreen from '../screens/checkout/PaymentSuccessScreen';
+import ListOrderScreen from '../screens/navbar/(profile)/ListOrderScreen';
+import OrderScreen from '../screens/navbar/(profile)/OrderScreen';
+import UseCoin from '../screens/navbar/(profile)/UseCoin';
+import ReviewScreen from '../screens/review/ReviewScreen';
 // import ListDeliveryScreen from '../screens/home/ListDeliveryScreen';
 
 const MainNavigator = () => {

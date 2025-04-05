@@ -8,7 +8,7 @@ import {
     TextInput,
     TouchableOpacity,
     SafeAreaView,
-    Alert
+    Alert,
 } from 'react-native';
 import productService from '../../service/api/productService';
 import reviewService from '../../service/api/reviewService';
@@ -42,27 +42,27 @@ const ReviewScreen = ({ navigation, route }: any) => {
 
     useEffect(() => {
         const fetchProducts = async () => {
-            const uniqueIds = Array.from(new Set(remainingLineItems.map(item => item.productId)));
+            const uniqueIds = Array.from(new Set(remainingLineItems.map((item) => item.productId)));
             const productsDict: { [key: number]: Product } = {};
             try {
-                const productPromises = uniqueIds.map(async id => {
+                const productPromises = uniqueIds.map(async (id) => {
                     const res = await productService.getById(id);
                     return res.data;
                 });
                 const productsData: Product[] = await Promise.all(productPromises);
-                productsData.forEach(product => {
+                productsData.forEach((product) => {
                     productsDict[product.id] = product;
                 });
                 setProducts(productsDict);
             } catch (error) {
-                console.error("Error fetching products in review screen:", error);
+                console.error('Error fetching products in review screen:', error);
             }
         };
         fetchProducts();
     }, [remainingLineItems]);
 
     const handleInputChange = (productId: number, field: 'star' | 'comment', value: string) => {
-        setReviewInputs(prev => ({
+        setReviewInputs((prev) => ({
             ...prev,
             [productId]: {
                 ...prev[productId],
@@ -74,19 +74,19 @@ const ReviewScreen = ({ navigation, route }: any) => {
         const productId = lineItem.productId;
         const reviewData = reviewInputs[productId];
         if (!reviewData || !reviewData.star || !reviewData.comment) {
-            Alert.alert("Error", "Vui lòng nhập cả rating và bình luận.");
+            Alert.alert('Error', 'Vui lòng nhập cả rating và bình luận.');
             return;
         }
         const star = parseFloat(reviewData.star);
         if (isNaN(star) || star < 0 || star > 5) {
-            Alert.alert("Error", "Rating phải là số từ 0 đến 5.");
+            Alert.alert('Error', 'Rating phải là số từ 0 đến 5.');
             return;
         }
         try {
             await reviewService.createReview(productId, { star, comment: reviewData.comment });
-            Alert.alert("Success", "Review đã được gửi thành công.");
-            setRemainingLineItems(prev => prev.filter(item => item.id !== lineItem.id));
-            setReviewInputs(prev => {
+            Alert.alert('Success', 'Review đã được gửi thành công.');
+            setRemainingLineItems((prev) => prev.filter((item) => item.id !== lineItem.id));
+            setReviewInputs((prev) => {
                 const newState = { ...prev };
                 delete newState[productId];
                 return newState;
@@ -95,18 +95,18 @@ const ReviewScreen = ({ navigation, route }: any) => {
                 setHasSubmittedReview(true);
             }
         } catch (error) {
-            console.error("Error submitting review:", error);
-            Alert.alert("Error", "Không thể gửi review, vui lòng thử lại sau.");
+            console.error('Error submitting review:', error);
+            Alert.alert('Error', 'Không thể gửi review, vui lòng thử lại sau.');
         }
     };
     const handleBack = async () => {
         if (hasSubmittedReview) {
             try {
                 await orderService.markOrderAsReviewed(orderId);
-                Alert.alert("Thông báo", "Đơn hàng đã được đánh dấu là đã review.");
+                Alert.alert('Thông báo', 'Đơn hàng đã được đánh dấu là đã review.');
             } catch (error) {
-                console.error("Error marking order as reviewed:", error);
-                Alert.alert("Error", "Không thể cập nhật trạng thái review của đơn hàng.");
+                console.error('Error marking order as reviewed:', error);
+                Alert.alert('Error', 'Không thể cập nhật trạng thái review của đơn hàng.');
             }
         }
         navigation.goBack();
@@ -119,7 +119,7 @@ const ReviewScreen = ({ navigation, route }: any) => {
                 {remainingLineItems.length === 0 ? (
                     <Text style={styles.infoText}>Bạn đã review hết các sản phẩm.</Text>
                 ) : (
-                    remainingLineItems.map(lineItem => {
+                    remainingLineItems.map((lineItem) => {
                         const product = products[lineItem.productId];
                         if (!product) {
                             return <Text key={lineItem.id}>Đang tải thông tin sản phẩm...</Text>;
@@ -133,14 +133,14 @@ const ReviewScreen = ({ navigation, route }: any) => {
                                     <Text style={styles.productInfo}>{`Số lượng: ${lineItem.quantity}`}</Text>
                                     <TextInput
                                         style={styles.input}
-                                        placeholder="Rating (0-5)"
-                                        keyboardType="numeric"
+                                        placeholder='Rating (0-5)'
+                                        keyboardType='numeric'
                                         value={reviewInputs[product.id]?.star || ''}
                                         onChangeText={(text) => handleInputChange(product.id, 'star', text)}
                                     />
                                     <TextInput
                                         style={styles.input}
-                                        placeholder="Bình luận"
+                                        placeholder='Bình luận'
                                         value={reviewInputs[product.id]?.comment || ''}
                                         onChangeText={(text) => handleInputChange(product.id, 'comment', text)}
                                     />
@@ -158,7 +158,6 @@ const ReviewScreen = ({ navigation, route }: any) => {
                 <TouchableOpacity style={styles.backButton} onPress={handleBack}>
                     <Text style={styles.backButtonText}>Quay lại</Text>
                 </TouchableOpacity>
-
             </ScrollView>
         </SafeAreaView>
     );
@@ -167,18 +166,19 @@ const ReviewScreen = ({ navigation, route }: any) => {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: '#f5f5f5'
+        backgroundColor: '#f5f5f5',
     },
     container: {
         padding: 16,
         backgroundColor: '#fff',
         flexGrow: 1,
+        marginTop: 50,
     },
     title: {
         fontSize: 24,
         fontWeight: 'bold',
         marginBottom: 16,
-        textAlign: 'center'
+        textAlign: 'center',
     },
     infoText: {
         fontSize: 16,
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
         color: '#000',
         fontSize: 16,
         fontWeight: 'bold',
-    }
+    },
 });
 
 export default ReviewScreen;

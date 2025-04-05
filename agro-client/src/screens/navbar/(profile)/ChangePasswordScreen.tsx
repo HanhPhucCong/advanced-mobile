@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import passwordService from '../../service/api/passwordService';
+import passwordService from '../../../service/api/passwordService';
 
 const ChangePasswordScreen = ({ route }: any) => {
     const navigation = useNavigation();
@@ -33,9 +33,9 @@ const ChangePasswordScreen = ({ route }: any) => {
             setOtpSent(true);
             setCountdown(30);
             Alert.alert('OTP đã được gửi', 'Vui lòng kiểm tra điện thoại');
-    
+
             const timer = setInterval(() => {
-                setCountdown(prev => {
+                setCountdown((prev) => {
                     if (prev <= 1) {
                         clearInterval(timer);
                         setOtpSent(false);
@@ -58,7 +58,7 @@ const ChangePasswordScreen = ({ route }: any) => {
             Alert.alert('Lỗi', 'Mật khẩu xác nhận không khớp.');
             return;
         }
-    
+
         const userId = userData.id;
         const response = await passwordService.changePassword(userId, confirmPassword, otp);
 
@@ -73,17 +73,16 @@ const ChangePasswordScreen = ({ route }: any) => {
     return (
         <View style={styles.container}>
             <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-                <Ionicons name="arrow-back" size={28} color="black" />
+                <Ionicons name='arrow-back' size={28} color='black' />
             </TouchableOpacity>
 
             <Text style={styles.title}>Đổi Mật Khẩu</Text>
-
 
             {/* Ô nhập mật khẩu mới */}
             <View style={styles.inputContainer}>
                 <TextInput
                     style={styles.input}
-                    placeholder="Nhập mật khẩu mới"
+                    placeholder='Nhập mật khẩu mới'
                     secureTextEntry={!showPasswords.new}
                     value={newPassword}
                     onChangeText={setNewPassword}
@@ -92,7 +91,7 @@ const ChangePasswordScreen = ({ route }: any) => {
                     <Ionicons
                         name={showPasswords.new ? 'eye' : 'eye-off'}
                         size={24}
-                        color="gray"
+                        color='gray'
                         style={styles.eyeIcon}
                     />
                 </TouchableOpacity>
@@ -102,7 +101,7 @@ const ChangePasswordScreen = ({ route }: any) => {
             <View style={styles.inputContainer}>
                 <TextInput
                     style={styles.input}
-                    placeholder="Xác nhận mật khẩu mới"
+                    placeholder='Xác nhận mật khẩu mới'
                     secureTextEntry={!showPasswords.confirm}
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
@@ -111,7 +110,7 @@ const ChangePasswordScreen = ({ route }: any) => {
                     <Ionicons
                         name={showPasswords.confirm ? 'eye' : 'eye-off'}
                         size={24}
-                        color="gray"
+                        color='gray'
                         style={styles.eyeIcon}
                     />
                 </TouchableOpacity>
@@ -121,19 +120,17 @@ const ChangePasswordScreen = ({ route }: any) => {
             <View style={styles.otpContainer}>
                 <TextInput
                     style={styles.otpInput}
-                    placeholder="Nhập mã OTP"
+                    placeholder='Nhập mã OTP'
                     value={otp}
                     onChangeText={setOtp}
-                    keyboardType="numeric"
+                    keyboardType='numeric'
                 />
                 <TouchableOpacity
                     style={[styles.otpButton, otpSent && styles.otpButtonDisabled]}
                     onPress={handleSendOtp}
                     disabled={otpSent}
                 >
-                    <Text style={styles.otpButtonText}>
-                        {otpSent ? `Gửi lại (${countdown}s)` : 'Gửi OTP'}
-                    </Text>
+                    <Text style={styles.otpButtonText}>{otpSent ? `Gửi lại (${countdown}s)` : 'Gửi OTP'}</Text>
                 </TouchableOpacity>
             </View>
 
