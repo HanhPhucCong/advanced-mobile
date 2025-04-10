@@ -8,10 +8,12 @@ import org.agromarket.agro_server.exception.NotFoundException;
 import org.agromarket.agro_server.model.dto.request.CouponRequest;
 import org.agromarket.agro_server.model.dto.response.CouponResponse;
 import org.agromarket.agro_server.model.entity.Coupon;
+import org.agromarket.agro_server.model.entity.Notification;
 import org.agromarket.agro_server.model.entity.User;
 import org.agromarket.agro_server.repositories.customer.CouponRepository;
 import org.agromarket.agro_server.repositories.customer.UserRepository;
 import org.agromarket.agro_server.service.customer.CouponService;
+import org.agromarket.agro_server.service.customer.NotificationService;
 import org.agromarket.agro_server.util.mapper.CouponMapper;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -29,6 +31,7 @@ public class CouponServiceImpl implements CouponService {
     private final CouponRepository couponRepository;
     private final CouponMapper couponMapper;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     // đổi mã giảm giá từ xu (1000-10000, bội số 1000)
     @Override
@@ -76,6 +79,14 @@ public class CouponServiceImpl implements CouponService {
         user.setCoin(user.getCoin() - coinAmount);
         userRepository.save(user);
 
+        // Tạo thông báo gửi riêng cho người dùng đã tạo mã giảm giá thành công
+        Notification notification = new Notification();
+        notification.setTitle("Tạo mã giảm gía thành công!");
+        notification.setContent("Mã giảm giá của bạn đã được tạo thành công. Mã là "+ coupon.getCode());
+        notification.setReadStatus(false);
+        notification.setCreatedDate(LocalDateTime.now());
+        notification.setUser(user);
+        notificationService.createAndSendNotification(notification);
         return couponMapper.convertToResponse(coupon);
     }
 

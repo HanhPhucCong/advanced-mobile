@@ -22,7 +22,7 @@ import OrderScreen from '../screens/navbar/(profile)/OrderScreen';
 import UseCoin from '../screens/navbar/(profile)/UseCoin';
 import ReviewScreen from '../screens/review/ReviewScreen';
 // import ListDeliveryScreen from '../screens/home/ListDeliveryScreen';
-
+import NotificationScreen from '../screens/navbar/NotidicationScreen';
 const MainNavigator = () => {
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -47,6 +47,8 @@ const MainNavigator = () => {
             <Stack.Screen name='OrderScreen' component={OrderScreen} />
             <Stack.Screen name='UseCoin' component={UseCoin} />
             <Stack.Screen name='ReviewScreen' component={ReviewScreen} />
+            <Stack.Screen name='Notification' component={NotificationScreen} />
+
         </Stack.Navigator>
     );
 };

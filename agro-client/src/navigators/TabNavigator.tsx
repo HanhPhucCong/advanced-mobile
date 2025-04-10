@@ -5,6 +5,7 @@ import SearchScreen from '../screens/navbar/SearchScreen';
 import ProfileScreen from '../screens/navbar/(profile)/ProfileScreen';
 import CartScreen from '../screens/navbar/CartScreen';
 import FavoriteScreen from '../screens/navbar/FavoriteScreen';
+import NotificationScreen from '../screens/navbar/NotidicationScreen';
 import Icon from 'react-native-vector-icons/Ionicons';
 
 const Tab = createBottomTabNavigator();
@@ -19,7 +20,8 @@ const TabNavigator = () => {
                     else if (route.name === 'Profile') iconName = 'person-outline';
                     else if (route.name === 'Cart') iconName = 'cart-outline';
                     else if (route.name === 'Favorite') iconName = 'heart-outline';
-
+                    else if (route.name === 'Notification') iconName = 'notifications-outline';
+ 
                     return <Icon name={iconName} size={size} color={color} />;
                 },
                 tabBarActiveTintColor: '#007AFF',
@@ -32,6 +34,7 @@ const TabNavigator = () => {
             <Tab.Screen name='Cart' component={CartScreen} />
             <Tab.Screen name='Favorite' component={FavoriteScreen} />
             <Tab.Screen name='Profile' component={ProfileScreen} />
+            <Tab.Screen name='Notification' component={NotificationScreen} />
         </Tab.Navigator>
     );
 };
