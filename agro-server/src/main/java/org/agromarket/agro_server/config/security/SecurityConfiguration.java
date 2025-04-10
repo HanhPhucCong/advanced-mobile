@@ -43,6 +43,7 @@ public class SecurityConfiguration {
     // Chỉ định domain frontend được phép gọi API
     configuration.setAllowedOriginPatterns(Arrays.asList("*"));
 
+
     // Cho phép tất cả headers và methods
     configuration.setAllowedHeaders(Arrays.asList("*"));
     configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
@@ -66,11 +67,10 @@ public class SecurityConfiguration {
                     .permitAll()
                     .requestMatchers("/api/public/**")
                     .permitAll()
-                    .requestMatchers("/admin/**")
-                    .permitAll() // Để tạm để khỏi xác nhận token cho admin
-                    .anyRequest()
-                    .authenticated())
-        .sessionManagement(
+                    .requestMatchers("/admin/**").permitAll()
+                        .requestMatchers("/ws/**").permitAll()
+                        .anyRequest().authenticated())
+            .sessionManagement(
             manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .exceptionHandling(
             exception ->

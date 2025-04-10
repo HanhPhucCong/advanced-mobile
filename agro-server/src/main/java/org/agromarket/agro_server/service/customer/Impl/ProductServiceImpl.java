@@ -11,6 +11,7 @@ import org.agromarket.agro_server.model.entity.Category;
 import org.agromarket.agro_server.model.entity.Product;
 import org.agromarket.agro_server.repositories.customer.CategoryRepository;
 import org.agromarket.agro_server.repositories.customer.ProductRepository;
+import org.agromarket.agro_server.service.customer.NotificationService;
 import org.agromarket.agro_server.service.customer.ProductService;
 import org.agromarket.agro_server.util.mapper.ProductMapper;
 import org.springframework.data.domain.Page;
@@ -27,11 +28,15 @@ public class ProductServiceImpl implements ProductService {
   private final ProductRepository productRepository;
   private final ProductMapper productMapper;
   private final CategoryRepository categoryRepository;
+  private final NotificationService notificationService;
 
   @Transactional
   @Override
   public ProductResponse create(ProductRequest productRequest) {
     Product product = productMapper.convertToEntity(productRequest);
+    String title = "Có Sản phẩm mới đáng chú ý";
+    String content = "Hệ thống vừa có sản phẩm mới là " + product.getName() + ". Bạn có thể tìm kiếm và xem thử.";
+    notificationService.sendBroadcastNotification(title, content);
     return productMapper.convertToReponse(productRepository.save(product));
   }
 

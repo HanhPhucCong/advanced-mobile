@@ -18,7 +18,7 @@ import VnpayScreen from '../screens/checkout/VnpayScreen';
 import PaymentFailedScreen from '../screens/checkout/PaymentFailedScreen';
 import PaymentSuccessScreen from '../screens/checkout/PaymentSuccessScreen';
 import UseCoin from '../screens/navbar/(profile)/UseCoin';
-
+import NotificationScreen from '../screens/navbar/NotidicationScreen';
 const AuthNavigator = () => {
     const Stack = createNativeStackNavigator();
 
@@ -42,6 +42,7 @@ const AuthNavigator = () => {
             <Stack.Screen name='PaymentFailedScreen' component={PaymentFailedScreen} />
             <Stack.Screen name='PaymentSuccessScreen' component={PaymentSuccessScreen} />
             <Stack.Screen name='UseCoin' component={UseCoin} />
+            <Stack.Screen name='Notification' component={NotificationScreen} />
         </Stack.Navigator>
     );
 };

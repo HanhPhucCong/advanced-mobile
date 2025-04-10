@@ -13,6 +13,7 @@ import org.agromarket.agro_server.model.dto.response.OrderResponse;
 import org.agromarket.agro_server.model.entity.*;
 import org.agromarket.agro_server.repositories.customer.*;
 import org.agromarket.agro_server.service.customer.CouponService;
+import org.agromarket.agro_server.service.customer.NotificationService;
 import org.agromarket.agro_server.service.customer.OrderService;
 import org.agromarket.agro_server.util.mapper.OrderMapper;
 import org.springframework.http.ResponseEntity;
@@ -38,6 +39,7 @@ public class OrderServiceImpl implements OrderService {
     private final ProductRepository productRepository;
     private final LineItemRepository lineItemRepository;
     private final CouponService couponService;
+    private final NotificationService notificationService;
 
     @Override
     public OrderResponse checkoutByCOD(CheckoutRequest checkoutRequest) {
@@ -88,8 +90,17 @@ public class OrderServiceImpl implements OrderService {
         }
         OrderResponse orderResponse = orderMapper.convertToResponse(orderRepository.save(order));
         lineItemRepository.saveAll(lineItems);
-
         productRepository.saveAll(productToSave);
+
+
+        // Tạo thông báo gửi riêng cho người dùng đặt hàng thành công
+        Notification notification = new Notification();
+        notification.setTitle("Đặt hàng thành công!");
+        notification.setContent("Đơn hàng của bạn đã được đặt thành công. Giá trị của đơn hàng là " + totalAmount);
+        notification.setReadStatus(false);
+        notification.setCreatedDate(LocalDateTime.now());
+        notification.setUser(user);
+        notificationService.createAndSendNotification(notification);
 
         return orderResponse;
     }
@@ -112,6 +123,14 @@ public class OrderServiceImpl implements OrderService {
         order.setIsActive(true);
         orderRepository.save(order);
 
+        // Tạo thông báo gửi riêng cho người dùng đơn hàng được xác nhận
+        Notification notification = new Notification();
+        notification.setTitle("Đặt hàng thành công!");
+        notification.setContent("Đơn hàng của bạn đã xác nhận.");
+        notification.setReadStatus(false);
+        notification.setCreatedDate(LocalDateTime.now());
+        notification.setUser(order.getUser());
+        notificationService.createAndSendNotification(notification);
         return orderMapper.convertToResponse(order);
     }
 
@@ -254,6 +273,16 @@ public class OrderServiceImpl implements OrderService {
         }
 
         orderRepository.save(order);
+
+        // Tạo thông báo gửi riêng cho người dùng hủy đơn hàng thành công
+        Notification notification = new Notification();
+        notification.setTitle("Đặt hàng của bạn bị hủy.");
+        notification.setContent("Đơn hàng của bạn đã hủy.");
+        notification.setReadStatus(false);
+        notification.setCreatedDate(LocalDateTime.now());
+        notification.setUser(order.getUser());
+        notificationService.createAndSendNotification(notification);
+
         return ResponseEntity.ok(new BaseResponse(message, 200, orderMapper.convertToResponse(order)));
     }
 
