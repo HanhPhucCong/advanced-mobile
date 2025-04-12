@@ -28,14 +28,13 @@ const styles = StyleSheet.create({
     loginButton: {
         paddingVertical: 10,
         paddingHorizontal: 20,
-        backgroundColor: 'transparent', // Xóa nền
+        backgroundColor: 'transparent',
         borderRadius: 8,
     },
     loginText: {
-        color: '#007AFF', // Màu xanh giống link
+        color: '#007AFF',
         fontSize: 18,
-        fontWeight: 'bold',
-        textDecorationLine: 'underline', // Đường gạch dưới
+        textDecorationLine: 'underline',
     },
 });
 
