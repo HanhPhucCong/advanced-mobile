@@ -16,7 +16,7 @@ interface Product {
     id: number;
     name: string;
     description: string;
-    purchaseCount: number,
+    purchaseCount: number;
     price: number;
     unit: string;
     imageUrls: string[];
@@ -62,10 +62,7 @@ const ProductDetailScreen = () => {
         setActiveSlide(slideIndex);
     };
     const reviewCount = reviews.length;
-    const avgRating =
-        reviewCount > 0
-            ? reviews.reduce((sum, review) => sum + review.star, 0) / reviewCount
-            : 0;
+    const avgRating = reviewCount > 0 ? reviews.reduce((sum, review) => sum + review.star, 0) / reviewCount : 0;
     const handleAddToCart = async () => {
         if (product.quantity === 0) {
             showMessage({
@@ -151,9 +148,7 @@ const ProductDetailScreen = () => {
                 <Text style={[styles.quantity, product.quantity === 0 && styles.outOfStock]}>
                     {product.quantity > 0 ? `In Stock: ${product.quantity}` : 'Out of stock'}
                 </Text>
-                <Text style={styles.purchaseCount}>
-                    Purchased: {product.purchaseCount}
-                </Text>
+                <Text style={styles.purchaseCount}>Purchased: {product.purchaseCount}</Text>
                 <Text style={styles.description}>{product.description}</Text>
             </View>
 
@@ -175,10 +170,10 @@ const ProductDetailScreen = () => {
             <View style={styles.reviewContainer}>
                 <Text style={styles.reviewTitle}>Reviews</Text>
                 {reviews.length > 0 ? (
-                    displayedReviews.map(review => (
+                    displayedReviews.map((review) => (
                         <View key={review.id} style={styles.reviewItem}>
                             <View style={styles.reviewHeader}>
-                                <Iconcc name="user-circle" size={30} color="#555" style={styles.userIcon} />
+                                <Iconcc name='user-circle' size={30} color='#555' style={styles.userIcon} />
                                 <Text style={styles.reviewStar}>
                                     {Array(5)
                                         .fill(0)
@@ -194,9 +189,7 @@ const ProductDetailScreen = () => {
                 )}
                 {reviews.length > 2 && (
                     <TouchableOpacity onPress={() => setShowAllReviews(!showAllReviews)}>
-                        <Text style={styles.viewMore}>
-                            {showAllReviews ? 'View Less' : 'View More'}
-                        </Text>
+                        <Text style={styles.viewMore}>{showAllReviews ? 'View Less' : 'View More'}</Text>
                     </TouchableOpacity>
                 )}
             </View>

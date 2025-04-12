@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
     SafeAreaView,
     View,
@@ -11,11 +11,14 @@ import {
     StyleSheet,
     TextInput,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/AntDesign';
 import cartService from '../../service/api/cartService';
 import productService from '../../service/api/productService';
 import formatCurrency from '../../utils/formatCurrency';
+import { appColors } from '../../constants/appColors';
+import RequireLoginComponent from '../../components/RequireLoginComponent';
 
 interface CartItem {
     id: number;
@@ -40,6 +43,17 @@ const CartScreen: React.FC = ({ navigation }: any) => {
     const [loading, setLoading] = useState<boolean>(false);
     const [selectAll, setSelectAll] = useState<boolean>(false);
     const [editingQuantities, setEditingQuantities] = useState<{ [key: number]: string }>({});
+    const [isRequireLogin, setIsRequireLogin] = useState(false);
+
+    const checkLogin = async () => {
+        try {
+            //await AsyncStorage.clear();
+            const token = await AsyncStorage.getItem('token');
+            return token;
+        } catch (error) {
+            //console.error('Error retrieving token:', error);
+        }
+    };
 
     const handleQuantityChange = (productId: number, text: string) => {
         setEditingQuantities((prev) => ({ ...prev, [productId]: text }));
@@ -117,6 +131,12 @@ const CartScreen: React.FC = ({ navigation }: any) => {
     };
 
     const fetchCart = async () => {
+        const token = await checkLogin();
+        if (!token) {
+            setIsRequireLogin(true);
+            return;
+        }
+
         setLoading(true);
         try {
             const response = await cartService.myCart();
@@ -202,91 +222,104 @@ const CartScreen: React.FC = ({ navigation }: any) => {
 
     return (
         <SafeAreaView style={styles.container}>
-            {loading ? (
-                <ActivityIndicator size='large' color='#ff5733' style={{ marginTop: 10 }} />
-            ) : cartItems.length === 0 ? (
-                <View style={styles.emptyContainer}>
-                    <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-                        <Icon name='arrowleft' size={26} color='#fff' />
-                    </TouchableOpacity>
-                    <Text style={styles.emptyText}>Giỏ hàng của bạn đang trống!</Text>
+            {isRequireLogin ? (
+                <View>
+                    <RequireLoginComponent navigation={navigation} />
                 </View>
             ) : (
-                <FlatList
-                    data={cartItems}
-                    keyExtractor={(item) => item.id.toString()}
-                    contentContainerStyle={{ paddingBottom: 20 }}
-                    ListHeaderComponent={
-                        <View style={styles.headerRow}>
-                            <TouchableOpacity onPress={handleSelectAll}>
-                                <Icon
-                                    name={selectAll ? 'checkcircle' : 'checkcircleo'}
-                                    size={20}
-                                    color={selectAll ? '#ff5733' : '#ccc'}
-                                    style={styles.checkIcon}
-                                />
+                <>
+                    {loading ? (
+                        <ActivityIndicator size='large' color='#ff5733' style={{ marginTop: 10 }} />
+                    ) : cartItems.length === 0 ? (
+                        <View style={styles.emptyContainer}>
+                            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+                                <Icon name='arrowleft' size={26} color='#fff' />
                             </TouchableOpacity>
-                            <Text style={styles.headerText}>Chọn tất cả</Text>
-                            <TouchableOpacity onPress={handleRemoveAll}>
-                                <Icon name='delete' size={20} color='gray' />
-                            </TouchableOpacity>
+                            <Text style={styles.emptyText}>Giỏ hàng của bạn đang trống!</Text>
                         </View>
-                    }
-                    renderItem={({ item }) => (
-                        <View style={styles.cartItem}>
-                            <TouchableOpacity onPress={() => toggleSelectItem(item.id)}>
-                                <Icon
-                                    name={selectedItems.includes(item.id) ? 'checkcircle' : 'checkcircleo'}
-                                    size={20}
-                                    color={selectedItems.includes(item.id) ? '#ff5733' : '#ccc'}
-                                    style={styles.checkIcon}
-                                />
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                onPress={() => navigation.navigate('ProductDetailScreen', { product: item.product })}
-                            >
-                                <Image source={{ uri: item.product?.imageUrls?.[0] }} style={styles.productImage} />
-                            </TouchableOpacity>
-                            <View style={styles.productDetails}>
-                                <Text style={styles.productName}>
-                                    {item.product?.name || 'Không tìm thấy sản phẩm'}
-                                </Text>
-                                <Text style={styles.price}>
-                                    {formatCurrency((item.product?.price || 0) * item.quantity)}
-                                </Text>
-                                <View style={styles.quantityContainer}>
-                                    <TouchableOpacity onPress={() => handleDecrease(item.productId)}>
-                                        <Icon name='minus' size={20} color='#ff5733' />
+                    ) : (
+                        <FlatList
+                            data={cartItems}
+                            keyExtractor={(item) => item.id.toString()}
+                            contentContainerStyle={{ paddingBottom: 20 }}
+                            ListHeaderComponent={
+                                <View style={styles.headerRow}>
+                                    <TouchableOpacity onPress={handleSelectAll}>
+                                        <Icon
+                                            name={selectAll ? 'checkcircle' : 'checkcircleo'}
+                                            size={20}
+                                            color={selectAll ? '#ff5733' : '#ccc'}
+                                            style={styles.checkIcon}
+                                        />
                                     </TouchableOpacity>
-                                    <TextInput
-                                        style={styles.quantityInput}
-                                        value={editingQuantities[item.productId] ?? item.quantity.toString()}
-                                        keyboardType='numeric'
-                                        onChangeText={(text) => handleQuantityChange(item.productId, text)}
-                                        onEndEditing={() => handleQuantitySubmit(item.productId)}
-                                    />
-                                    <TouchableOpacity onPress={() => handleIncrease(item.productId)}>
-                                        <Icon name='plus' size={20} color='#ff5733' />
+                                    <Text style={styles.headerText}>Chọn tất cả</Text>
+                                    <TouchableOpacity onPress={handleRemoveAll}>
+                                        <Icon name='delete' size={20} color='gray' />
                                     </TouchableOpacity>
                                 </View>
-                            </View>
-                            <TouchableOpacity onPress={() => handleRemoveItem(item.id)}>
-                                <Icon name='delete' size={20} color='gray' />
+                            }
+                            renderItem={({ item }) => (
+                                <View style={styles.cartItem}>
+                                    <TouchableOpacity onPress={() => toggleSelectItem(item.id)}>
+                                        <Icon
+                                            name={selectedItems.includes(item.id) ? 'checkcircle' : 'checkcircleo'}
+                                            size={20}
+                                            color={selectedItems.includes(item.id) ? '#ff5733' : '#ccc'}
+                                            style={styles.checkIcon}
+                                        />
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        onPress={() =>
+                                            navigation.navigate('ProductDetailScreen', { product: item.product })
+                                        }
+                                    >
+                                        <Image
+                                            source={{ uri: item.product?.imageUrls?.[0] }}
+                                            style={styles.productImage}
+                                        />
+                                    </TouchableOpacity>
+                                    <View style={styles.productDetails}>
+                                        <Text style={styles.productName}>
+                                            {item.product?.name || 'Không tìm thấy sản phẩm'}
+                                        </Text>
+                                        <Text style={styles.price}>
+                                            {formatCurrency((item.product?.price || 0) * item.quantity)}
+                                        </Text>
+                                        <View style={styles.quantityContainer}>
+                                            <TouchableOpacity onPress={() => handleDecrease(item.productId)}>
+                                                <Icon name='minus' size={20} color='#ff5733' />
+                                            </TouchableOpacity>
+                                            <TextInput
+                                                style={styles.quantityInput}
+                                                value={editingQuantities[item.productId] ?? item.quantity.toString()}
+                                                keyboardType='numeric'
+                                                onChangeText={(text) => handleQuantityChange(item.productId, text)}
+                                                onEndEditing={() => handleQuantitySubmit(item.productId)}
+                                            />
+                                            <TouchableOpacity onPress={() => handleIncrease(item.productId)}>
+                                                <Icon name='plus' size={20} color='#ff5733' />
+                                            </TouchableOpacity>
+                                        </View>
+                                    </View>
+                                    <TouchableOpacity onPress={() => handleRemoveItem(item.id)}>
+                                        <Icon name='delete' size={20} color='gray' />
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+                        />
+                    )}
+                    {selectedItems.length > 0 && (
+                        <View style={styles.footer}>
+                            <Text style={styles.totalText}>Tổng cộng: {formatCurrency(totalAmount)}</Text>
+                            <TouchableOpacity style={styles.checkoutButton} onPress={handleCheckout}>
+                                <Text style={styles.checkoutText}>Thanh toán</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.deleteButton} onPress={handleRemoveSelected}>
+                                <Text style={styles.checkoutText}>Xóa tất cả đã chọn</Text>
                             </TouchableOpacity>
                         </View>
                     )}
-                />
-            )}
-            {selectedItems.length > 0 && (
-                <View style={styles.footer}>
-                    <Text style={styles.totalText}>Tổng cộng: {formatCurrency(totalAmount)}</Text>
-                    <TouchableOpacity style={styles.checkoutButton} onPress={handleCheckout}>
-                        <Text style={styles.checkoutText}>Thanh toán</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.deleteButton} onPress={handleRemoveSelected}>
-                        <Text style={styles.checkoutText}>Xóa tất cả đã chọn</Text>
-                    </TouchableOpacity>
-                </View>
+                </>
             )}
         </SafeAreaView>
     );
@@ -367,5 +400,9 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         flex: 1,
         textAlign: 'center',
+    },
+    linkText: {
+        fontSize: 16,
+        color: appColors.blueLink,
     },
 });

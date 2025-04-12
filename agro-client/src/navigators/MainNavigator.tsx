@@ -21,12 +21,15 @@ import ListOrderScreen from '../screens/navbar/(profile)/ListOrderScreen';
 import OrderScreen from '../screens/navbar/(profile)/OrderScreen';
 import UseCoin from '../screens/navbar/(profile)/UseCoin';
 import ReviewScreen from '../screens/review/ReviewScreen';
+import HomeScreen from '../screens/home/HomeScreen';
 // import ListDeliveryScreen from '../screens/home/ListDeliveryScreen';
 import NotificationScreen from '../screens/navbar/NotidicationScreen';
+import OnbroadingScreen from '../screens/auth/OnBoarding';
+
 const MainNavigator = () => {
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
-            {/* đăng nhập xong mới vào đây -> đăng nhập xong mới dùng được các dưới đây */}
+            <Stack.Screen name='OnbroadingScreen' component={OnbroadingScreen} />
             <Stack.Screen name='Main' component={TabNavigator} />
             <Stack.Screen name='EditProfile' component={EditProfileScreen} />
             <Stack.Screen name='ChangePassword' component={ChangePasswordScreen} />
@@ -48,7 +51,7 @@ const MainNavigator = () => {
             <Stack.Screen name='UseCoin' component={UseCoin} />
             <Stack.Screen name='ReviewScreen' component={ReviewScreen} />
             <Stack.Screen name='Notification' component={NotificationScreen} />
-
+            <Stack.Screen name='HomeScreen' component={HomeScreen} />
         </Stack.Navigator>
     );
 };

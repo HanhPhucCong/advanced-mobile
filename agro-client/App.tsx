@@ -43,7 +43,8 @@ const App = () => {
                 <SplashScreen />
             ) : (
                 <NavigationContainer ref={navigationRef}>
-                    {accessToken ? <MainNavigator /> : <AuthNavigator />}
+                    <MainNavigator />
+                    {/* {accessToken ? <MainNavigator /> : <AuthNavigator />} */}
                 </NavigationContainer>
             )}
             <FlashMessage position='top' />
