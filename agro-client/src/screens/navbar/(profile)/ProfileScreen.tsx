@@ -5,6 +5,7 @@ import { View, Text, Image, ActivityIndicator, StyleSheet, ScrollView, Touchable
 import profileService from '../../../service/api/profileService';
 import authService from '../../../service/api/authService';
 import orderService from '../../../service/api/orderService';
+import RequireLoginComponent from '../../../components/RequireLoginComponent';
 
 type User = {
     id: number;
@@ -43,7 +44,25 @@ const ProfileScreen = ({ navigation }: any) => {
     const [userData, setUserData] = useState<User | null>(null);
     const [orders, setOrders] = useState<number>(0);
     const [deliveredCount, setDeliveredCount] = useState<number>(0);
+    const [isRequireLogin, setIsRequireLogin] = useState(false);
+
+    const checkLogin = async () => {
+        try {
+            //await AsyncStorage.clear();
+            const token = await AsyncStorage.getItem('token');
+            return token;
+        } catch (error) {
+            //console.error('Error retrieving token:', error);
+        }
+    };
+
     const fetchUserData = async () => {
+        const token = await checkLogin();
+        if (!token) {
+            setIsRequireLogin(true);
+            return;
+        }
+
         setLoading(true);
         try {
             const data = await profileService.getAllActive();
@@ -56,6 +75,12 @@ const ProfileScreen = ({ navigation }: any) => {
     };
 
     const fetchOrderData = async () => {
+        const token = await checkLogin();
+        if (!token) {
+            setIsRequireLogin(true);
+            return;
+        }
+
         setLoading(true);
         try {
             const response = await orderService.getMyOrder();
@@ -110,69 +135,80 @@ const ProfileScreen = ({ navigation }: any) => {
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
-            {loading ? (
-                <ActivityIndicator size='large' color='#007bff' />
-            ) : userData ? (
-                <View style={styles.profileCard}>
-                    <Image
-                        source={{ uri: userData.avatarUrl || 'https://via.placeholder.com/120' }}
-                        style={styles.avatar}
-                    />
-                    <Text style={styles.name}>{userData.fullName}</Text>
-                    <Text style={styles.email}>{userData.email}</Text>
+            {isRequireLogin ? (
+                <View>
+                    <RequireLoginComponent navigation={navigation} />
+                </View>
+            ) : (
+                <>
+                    {loading ? (
+                        <ActivityIndicator size='large' color='#007bff' />
+                    ) : userData ? (
+                        <View style={styles.profileCard}>
+                            <Image
+                                source={{ uri: userData.avatarUrl || 'https://via.placeholder.com/120' }}
+                                style={styles.avatar}
+                            />
+                            <Text style={styles.name}>{userData.fullName}</Text>
+                            <Text style={styles.email}>{userData.email}</Text>
 
-                    <View style={styles.infoContainer}>
-                        <InfoRow label='Số điện thoại' value={userData.phoneNumber || 'Chưa cập nhật'} />
-                        <InfoRow label='Địa chỉ' value={userData.address || 'Chưa cập nhật'} />
-                        <InfoRow label='Ngày sinh' value={formatDate(userData.dateOfBirth) || 'Chưa cập nhật'} />
-                        {/* <InfoRow
+                            <View style={styles.infoContainer}>
+                                <InfoRow label='Số điện thoại' value={userData.phoneNumber || 'Chưa cập nhật'} />
+                                <InfoRow label='Địa chỉ' value={userData.address || 'Chưa cập nhật'} />
+                                <InfoRow
+                                    label='Ngày sinh'
+                                    value={formatDate(userData.dateOfBirth) || 'Chưa cập nhật'}
+                                />
+                                {/* <InfoRow
                             label='Đơn hàng đang vận chuyển'
                             value={deliveredCount !== undefined ? deliveredCount.toString() : 'Chưa có'}
                         /> */}
-                        <InfoRow
-                            label='Tổng số đơn hàng'
-                            value={orders !== undefined ? orders.toString() : 'Chưa có'}
-                        />
-                        <View style={styles.coinContainer}>
-                            <Text style={styles.infoLabel}>Số xu hiện có:</Text>
-                            <Text style={styles.infoCoin}>{userData.coin?.toLocaleString() || '0'} xu</Text>
-                            <TouchableOpacity
-                                style={styles.useCoinButton}
-                                onPress={() => navigation.navigate('UseCoin', { currentCoin: userData.coin })}
-                            >
-                                <Text style={styles.useCoinText}>Sử dụng xu</Text>
-                            </TouchableOpacity>
+                                <InfoRow
+                                    label='Tổng số đơn hàng'
+                                    value={orders !== undefined ? orders.toString() : 'Chưa có'}
+                                />
+                                <View style={styles.coinContainer}>
+                                    <Text style={styles.infoLabel}>Số xu hiện có:</Text>
+                                    <Text style={styles.infoCoin}>{userData.coin?.toLocaleString() || '0'} xu</Text>
+                                    <TouchableOpacity
+                                        style={styles.useCoinButton}
+                                        onPress={() => navigation.navigate('UseCoin', { currentCoin: userData.coin })}
+                                    >
+                                        <Text style={styles.useCoinText}>Sử dụng xu</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                            <View style={styles.buttonContainer}>
+                                <TouchableOpacity
+                                    style={[styles.button, styles.editButton]}
+                                    onPress={() => navigation.navigate('EditProfile', { userData })}
+                                >
+                                    <Text style={styles.buttonText}>Sửa hồ sơ</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[styles.button, styles.changePasswordButton]}
+                                    onPress={() => navigation.navigate('ChangePassword', { userData })}
+                                >
+                                    <Text style={styles.buttonText}>Đổi mật khẩu</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[styles.button, styles.orderListButton]}
+                                    onPress={() => navigation.navigate('ListOrderScreen', { userData })}
+                                >
+                                    <Text style={styles.buttonText}>Đơn hàng</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={[styles.button, styles.logoutButton]} onPress={handleLogout}>
+                                    <Text style={styles.buttonText}>Đăng xuất</Text>
+                                </TouchableOpacity>
+                            </View>
                         </View>
-                    </View>
-                    <View style={styles.buttonContainer}>
-                        <TouchableOpacity
-                            style={[styles.button, styles.editButton]}
-                            onPress={() => navigation.navigate('EditProfile', { userData })}
-                        >
-                            <Text style={styles.buttonText}>Sửa hồ sơ</Text>
+                    ) : (
+                        <TouchableOpacity>
+                            <Text style={styles.errorText}>Không thể tải dữ liệu người dùng.</Text>
+                            <Button title='Đăng xuất' onPress={handleLogout} />
                         </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.button, styles.changePasswordButton]}
-                            onPress={() => navigation.navigate('ChangePassword', { userData })}
-                        >
-                            <Text style={styles.buttonText}>Đổi mật khẩu</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.button, styles.orderListButton]}
-                            onPress={() => navigation.navigate('ListOrderScreen', { userData })}
-                        >
-                            <Text style={styles.buttonText}>Đơn hàng</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={[styles.button, styles.logoutButton]} onPress={handleLogout}>
-                            <Text style={styles.buttonText}>Đăng xuất</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            ) : (
-                <TouchableOpacity>
-                    <Text style={styles.errorText}>Không thể tải dữ liệu người dùng.</Text>
-                    <Button title='Đăng xuất' onPress={handleLogout} />
-                </TouchableOpacity>
+                    )}
+                </>
             )}
         </ScrollView>
     );
@@ -193,11 +229,11 @@ const InfoRow: React.FC<InfoRowProps> = ({ label, value }) => (
 const styles = StyleSheet.create({
     container: {
         flexGrow: 1,
-        justifyContent: 'center',
         alignItems: 'center',
         padding: 20,
         backgroundColor: '#fff',
         top: 20,
+        marginTop: 20,
     },
     profileCard: { width: '100%', maxWidth: 400, alignItems: 'center', padding: 20 },
     avatar: { width: 120, height: 120, borderRadius: 60, marginBottom: 15 },

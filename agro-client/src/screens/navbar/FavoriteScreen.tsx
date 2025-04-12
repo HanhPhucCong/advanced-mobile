@@ -10,12 +10,14 @@ import {
     StyleSheet,
     Alert,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { showMessage } from 'react-native-flash-message';
 import Icon from 'react-native-vector-icons/AntDesign';
 import favoriteService from '../../service/api/favoriteService';
 import cartService from '../../service/api/cartService';
 import formatCurrency from '../../utils/formatCurrency';
+import RequireLoginComponent from '../../components/RequireLoginComponent';
 
 interface Product {
     id: number;
@@ -28,8 +30,25 @@ const FavoriteScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     const [favorites, setFavorites] = useState<Product[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [selectedItems, setSelectedItems] = useState<number[]>([]);
+    const [isRequireLogin, setIsRequireLogin] = useState(false);
+
+    const checkLogin = async () => {
+        try {
+            //await AsyncStorage.clear();
+            const token = await AsyncStorage.getItem('token');
+            return token;
+        } catch (error) {
+            //console.error('Error retrieving token:', error);
+        }
+    };
 
     const fetchFavorites = async () => {
+        const token = await checkLogin();
+        if (!token) {
+            setIsRequireLogin(true);
+            return;
+        }
+
         setLoading(true);
         try {
             const response = await favoriteService.myFavorite();
@@ -108,65 +127,77 @@ const FavoriteScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
     return (
         <SafeAreaView style={styles.container}>
-            {loading ? (
-                <ActivityIndicator size='large' color='#ff5733' style={{ marginTop: 10 }} />
-            ) : favorites.length === 0 ? (
-                <View style={styles.emptyContainer}>
-                    <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-                        <Icon name='arrowleft' size={26} color='#fff' />
-                    </TouchableOpacity>
-                    <Text style={styles.emptyText}>Danh sách yêu thích trống!</Text>
+            {isRequireLogin ? (
+                <View>
+                    <RequireLoginComponent navigation={navigation} />
                 </View>
             ) : (
                 <>
-                    <FlatList
-                        data={favorites}
-                        keyExtractor={(item) => item.id.toString()}
-                        ListHeaderComponent={
-                            <View style={styles.headerRow}>
-                                <TouchableOpacity onPress={toggleSelectAll}>
-                                    <Icon
-                                        name={
-                                            selectedItems.length === favorites.length ? 'checkcircle' : 'checkcircleo'
-                                        }
-                                        size={20}
-                                        color='blue'
-                                    />
-                                </TouchableOpacity>
-                                <TouchableOpacity onPress={handleRemoveAll}>
-                                    <Icon name='delete' size={20} color='gray' />
-                                </TouchableOpacity>
-                            </View>
-                        }
-                        renderItem={({ item }) => (
-                            <View style={styles.favoriteItem}>
-                                <TouchableOpacity onPress={() => toggleSelectItem(item.id)}>
-                                    <Icon
-                                        name={selectedItems.includes(item.id) ? 'checkcircle' : 'checkcircleo'}
-                                        size={20}
-                                        color='blue'
-                                    />
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    onPress={() => navigation.navigate('ProductDetailScreen', { product: item })}
-                                >
-                                    <Image source={{ uri: item.imageUrls?.[0] }} style={styles.productImage} />
-                                </TouchableOpacity>
+                    {loading ? (
+                        <ActivityIndicator size='large' color='#ff5733' style={{ marginTop: 10 }} />
+                    ) : favorites.length === 0 ? (
+                        <View style={styles.emptyContainer}>
+                            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+                                <Icon name='arrowleft' size={26} color='#fff' />
+                            </TouchableOpacity>
+                            <Text style={styles.emptyText}>Danh sách yêu thích trống!</Text>
+                        </View>
+                    ) : (
+                        <>
+                            <FlatList
+                                data={favorites}
+                                keyExtractor={(item) => item.id.toString()}
+                                ListHeaderComponent={
+                                    <View style={styles.headerRow}>
+                                        <TouchableOpacity onPress={toggleSelectAll}>
+                                            <Icon
+                                                name={
+                                                    selectedItems.length === favorites.length
+                                                        ? 'checkcircle'
+                                                        : 'checkcircleo'
+                                                }
+                                                size={20}
+                                                color='blue'
+                                            />
+                                        </TouchableOpacity>
+                                        <TouchableOpacity onPress={handleRemoveAll}>
+                                            <Icon name='delete' size={20} color='gray' />
+                                        </TouchableOpacity>
+                                    </View>
+                                }
+                                renderItem={({ item }) => (
+                                    <View style={styles.favoriteItem}>
+                                        <TouchableOpacity onPress={() => toggleSelectItem(item.id)}>
+                                            <Icon
+                                                name={selectedItems.includes(item.id) ? 'checkcircle' : 'checkcircleo'}
+                                                size={20}
+                                                color='blue'
+                                            />
+                                        </TouchableOpacity>
+                                        <TouchableOpacity
+                                            onPress={() =>
+                                                navigation.navigate('ProductDetailScreen', { product: item })
+                                            }
+                                        >
+                                            <Image source={{ uri: item.imageUrls?.[0] }} style={styles.productImage} />
+                                        </TouchableOpacity>
 
-                                <View style={styles.productDetails}>
-                                    <Text style={styles.productName}>{item.name}</Text>
-                                    <Text style={styles.price}>{formatCurrency(item.price)}</Text>
-                                </View>
-                                <TouchableOpacity onPress={() => handleRemoveFavorite(item.id)}>
-                                    <Icon name='delete' size={20} color='gray' />
+                                        <View style={styles.productDetails}>
+                                            <Text style={styles.productName}>{item.name}</Text>
+                                            <Text style={styles.price}>{formatCurrency(item.price)}</Text>
+                                        </View>
+                                        <TouchableOpacity onPress={() => handleRemoveFavorite(item.id)}>
+                                            <Icon name='delete' size={20} color='gray' />
+                                        </TouchableOpacity>
+                                    </View>
+                                )}
+                            />
+                            {selectedItems.length > 0 && (
+                                <TouchableOpacity style={styles.addToCartButton} onPress={handleAddAllToCart}>
+                                    <Text style={styles.addToCartText}>Thêm vào giỏ hàng</Text>
                                 </TouchableOpacity>
-                            </View>
-                        )}
-                    />
-                    {selectedItems.length > 0 && (
-                        <TouchableOpacity style={styles.addToCartButton} onPress={handleAddAllToCart}>
-                            <Text style={styles.addToCartText}>Thêm vào giỏ hàng</Text>
-                        </TouchableOpacity>
+                            )}
+                        </>
                     )}
                 </>
             )}

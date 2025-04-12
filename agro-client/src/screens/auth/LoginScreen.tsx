@@ -132,6 +132,13 @@ const LoginScreen = ({ navigation }: any) => {
                         <Text style={[styles.linkText, { marginLeft: 5 }]}>Sign up</Text>
                     </TouchableOpacity>
                 </View>
+
+                <View style={styles.guestRow}>
+                    <Text style={styles.guestTitle}>Continue as a guest?</Text>
+                    <TouchableOpacity onPress={() => navigation.navigate('Main')}>
+                        <Text style={styles.guestLink}> Go to Home</Text>
+                    </TouchableOpacity>
+                </View>
             </SectionComponent>
         </ContainerComponent>
     );
@@ -150,6 +157,21 @@ const styles = StyleSheet.create({
     linkText: {
         fontSize: 16,
         color: appColors.blueLink,
+    },
+    guestRow: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 30,
+    },
+    guestTitle: {
+        fontSize: 14,
+        color: '#666',
+    },
+    guestLink: {
+        fontSize: 14,
+        color: '#007AFF',
+        textDecorationLine: 'underline',
     },
 });
 
