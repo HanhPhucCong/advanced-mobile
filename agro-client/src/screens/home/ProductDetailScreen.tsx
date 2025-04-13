@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator } from 'react-native';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/AntDesign';
 import formatCurrency from '../../utils/formatCurrency';
@@ -8,10 +8,10 @@ import favoriteService from '../../service/api/favoriteService';
 import { showMessage, hideMessage } from 'react-native-flash-message';
 import reviewService from '../../service/api/reviewService';
 import Iconcc from 'react-native-vector-icons/FontAwesome';
+import productService from '../../service/api/productService';
 
 // lấy chiều rộng màn hình để làm slideshow, css các kiểu
 const { width } = Dimensions.get('window');
-
 interface Product {
     id: number;
     name: string;
@@ -33,7 +33,6 @@ interface Review {
     star: number;
     comment: string;
 }
-
 type ProductDetailRouteProp = RouteProp<{ ProductDetail: { product: Product } }, 'ProductDetail'>;
 
 const ProductDetailScreen = () => {
@@ -44,7 +43,8 @@ const ProductDetailScreen = () => {
     const [activeSlide, setActiveSlide] = useState(0);
     const [showAllReviews, setShowAllReviews] = useState(false);
     const displayedReviews = showAllReviews ? reviews : reviews.slice(0, 2);
-
+    const [randomProducts, setRandomProducts] = useState<Product[]>([]);
+    const [randomLoading, setRandomLoading] = useState<boolean>(true);
     useEffect(() => {
         const fetchReviews = async () => {
             try {
@@ -54,6 +54,17 @@ const ProductDetailScreen = () => {
                 console.error('Failed to fetch reviews:', error);
             }
         };
+        const fetchRandomProducts = async () => {
+            try {
+                const response = await productService.getRandomProducts();
+                setRandomProducts(response.data.content);
+            } catch (error) {
+                console.error('Error fetching random products:', error);
+            } finally {
+                setRandomLoading(false);
+            }
+        };
+        fetchRandomProducts();
         fetchReviews();
     }, [product.id]);
     // event.nativeEvent.contentOffset.x: toạ đọ X hiện tại
@@ -193,6 +204,26 @@ const ProductDetailScreen = () => {
                     </TouchableOpacity>
                 )}
             </View>
+            <View style={[styles.randomProductsContainer, { marginBottom: 20 }]}>
+                <Text style={styles.randomTitle}>Có thể bạn thích</Text>
+                {randomLoading ? (
+                    <ActivityIndicator size="large" color="#ff5733" />
+                ) : (
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                        {randomProducts.map((item) => (
+                            <TouchableOpacity
+                                key={item.id}
+                                style={styles.randomItem}
+                                onPress={() => navigation.navigate('ProductDetailScreen', { product: item })}
+                            >
+                                <Image source={{ uri: item.imageUrls[0] }} style={styles.randomImage} />
+                                <Text style={styles.randomName}>{item.name}</Text>
+                                <Text style={styles.randomPrice}>{formatCurrency(item.price)}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
+                )}
+            </View>
         </ScrollView>
     );
 };
@@ -301,6 +332,37 @@ const styles = StyleSheet.create({
     purchaseCount: {
         fontSize: 15,
         color: 'black',
+    },
+    randomProductsContainer: {
+        marginTop: 20,
+        paddingHorizontal: 16,
+    },
+    randomTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 10,
+    },
+    randomItem: {
+        marginRight: 10,
+        width: 120,
+        alignItems: 'center',
+    },
+    randomImage: {
+        width: 120,
+        height: 100,
+        borderRadius: 10,
+        resizeMode: 'cover',
+    },
+    randomName: {
+        marginTop: 5,
+        fontSize: 14,
+        color: '#333',
+        textAlign: 'center',
+    },
+    randomPrice: {
+        fontSize: 14,
+        color: '#007AFF',
+        fontWeight: '500',
     },
 });
 
