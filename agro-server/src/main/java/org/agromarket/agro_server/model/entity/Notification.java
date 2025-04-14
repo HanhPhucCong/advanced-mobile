@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Data
-@Table(name = "notification")
+@Table(name = "notifications")
 @NoArgsConstructor
 @AllArgsConstructor
 public class Notification {
@@ -22,8 +22,8 @@ public class Notification {
 
     private String content; // noi dung thong bao
 
-    @OneToOne
-    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
     @JsonIgnore
     private User user; // user nhan thong bao
 

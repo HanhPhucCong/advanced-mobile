@@ -411,17 +411,18 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderResponse markOrderAsReviewed(long orderId) {
-      Order order = orderRepository.findById(orderId)
-              .orElseThrow(() -> new NotFoundException("Order not found with id: " + orderId));
-      order.setHasReview(true);
-      orderRepository.save(order);
-      return orderMapper.convertToResponse(order);
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new NotFoundException("Order not found with id: " + orderId));
+        order.setHasReview(true);
+        orderRepository.save(order);
+        return orderMapper.convertToResponse(order);
     }
+
     @Override
     public boolean checkHasReview(long orderId) {
-      Order order = orderRepository.findById(orderId)
-              .orElseThrow(() -> new NotFoundException("Order not found with id: " + orderId));
-      return order.isHasReview();
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new NotFoundException("Order not found with id: " + orderId));
+        return order.isHasReview();
     }
 
 }

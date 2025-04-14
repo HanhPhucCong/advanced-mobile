@@ -26,27 +26,34 @@ const OtpVerificationScreen = ({ navigation, route }: any) => {
         try {
             setLoading(true);
             Keyboard.dismiss();
+
             const verifyResponse: any = await authService.verify(otp, userId);
             if (verifyResponse && verifyResponse.data) {
                 showMessage({
                     message: 'Verify account successfully!',
-                    description: verifyResponse.message,
+                    description: verifyResponse.message || 'Your account has been verified.',
                     type: 'success',
                     hideStatusBar: true,
                     position: 'top',
                     duration: 4000,
                 });
+
                 navigation.navigate('LoginScreen');
             }
         } catch (error: any) {
-            //console.error('Error during signup:', error.response || error.message); // Log chi tiết lỗi
             let errorMessage = 'Verify failed!';
 
-            // Kiểm tra lỗi từ phản hồi của server
             if (error.response && error.response.data) {
-                const { message } = error.response.data;
-                if (message) {
-                    errorMessage = message;
+                const data = error.response.data;
+
+                if (typeof data === 'string') {
+                    errorMessage = data;
+                } else if (data.message) {
+                    errorMessage = data.message;
+                } else if (data.Message) {
+                    errorMessage = data.Message;
+                } else if (Array.isArray(data.errors)) {
+                    errorMessage = data.errors.join('\n');
                 }
             } else if (error.message) {
                 errorMessage = error.message;

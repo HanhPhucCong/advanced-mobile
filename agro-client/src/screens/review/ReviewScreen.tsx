@@ -1,15 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import {
-    View,
-    Text,
-    StyleSheet,
-    Image,
-    ScrollView,
-    TextInput,
-    TouchableOpacity,
-    SafeAreaView,
-    Alert,
-} from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView, TextInput, TouchableOpacity, SafeAreaView } from 'react-native';
+import { showMessage } from 'react-native-flash-message';
 import productService from '../../service/api/productService';
 import reviewService from '../../service/api/reviewService';
 import orderService from '../../service/api/orderService';
@@ -70,21 +61,40 @@ const ReviewScreen = ({ navigation, route }: any) => {
             },
         }));
     };
+
     const handleSubmitReview = async (lineItem: LineItem) => {
         const productId = lineItem.productId;
         const reviewData = reviewInputs[productId];
         if (!reviewData || !reviewData.star || !reviewData.comment) {
-            Alert.alert('Error', 'Vui lòng nhập cả rating và bình luận.');
+            showMessage({
+                message: 'Thiếu thông tin',
+                description: 'Vui lòng nhập cả rating và bình luận.',
+                type: 'danger',
+                duration: 4000,
+                position: 'top',
+            });
             return;
         }
         const star = parseFloat(reviewData.star);
         if (isNaN(star) || star < 0 || star > 5) {
-            Alert.alert('Error', 'Rating phải là số từ 0 đến 5.');
+            showMessage({
+                message: 'Giá trị không hợp lệ',
+                description: 'Rating phải là số từ 0 đến 5.',
+                type: 'danger',
+                duration: 4000,
+                position: 'top',
+            });
             return;
         }
         try {
             await reviewService.createReview(productId, { star, comment: reviewData.comment });
-            Alert.alert('Success', 'Review đã được gửi thành công.');
+            showMessage({
+                message: 'Thành công',
+                description: 'Review đã được gửi thành công. Bạn vừa nhận được 1000 xu!',
+                type: 'success',
+                duration: 4000,
+                position: 'top',
+            });
             setRemainingLineItems((prev) => prev.filter((item) => item.id !== lineItem.id));
             setReviewInputs((prev) => {
                 const newState = { ...prev };
@@ -96,17 +106,29 @@ const ReviewScreen = ({ navigation, route }: any) => {
             }
         } catch (error) {
             console.error('Error submitting review:', error);
-            Alert.alert('Error', 'Không thể gửi review, vui lòng thử lại sau.');
+            showMessage({
+                message: 'Lỗi',
+                description: 'Không thể gửi review, vui lòng thử lại sau.',
+                type: 'danger',
+                duration: 4000,
+                position: 'top',
+            });
         }
     };
+
     const handleBack = async () => {
         if (hasSubmittedReview) {
             try {
                 await orderService.markOrderAsReviewed(orderId);
-                Alert.alert('Thông báo', 'Đơn hàng đã được đánh dấu là đã review.');
             } catch (error) {
                 console.error('Error marking order as reviewed:', error);
-                Alert.alert('Error', 'Không thể cập nhật trạng thái review của đơn hàng.');
+                showMessage({
+                    message: 'Lỗi',
+                    description: 'Không thể cập nhật trạng thái review của đơn hàng.',
+                    type: 'danger',
+                    duration: 4000,
+                    position: 'top',
+                });
             }
         }
         navigation.goBack();

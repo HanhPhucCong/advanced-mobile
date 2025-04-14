@@ -37,20 +37,28 @@ const SignupScreen = ({ navigation }: any) => {
     const handleSignup = async () => {
         try {
             setLoading(true);
+            console.log(fullName, email, password, confirmPassword);
             const response: any = await authService.register(fullName, email, password, confirmPassword);
+            console.log(response);
+
             if (response && response.data) {
                 const userId = response.data.id || null;
                 navigation.navigate('OtpVerificationScreen', { email, userId });
             }
         } catch (error: any) {
-            //console.error('Error during signup:', error.response || error.message); // Log chi tiết lỗi
             let errorMessage = 'Sign up failed!';
 
-            // Kiểm tra lỗi từ phản hồi của server
             if (error.response && error.response.data) {
-                const { Message } = error.response.data;
-                if (Message) {
-                    errorMessage = Message;
+                const data = error.response.data;
+
+                if (typeof data === 'string') {
+                    errorMessage = data;
+                } else if (data.message) {
+                    errorMessage = data.message;
+                } else if (data.Message) {
+                    errorMessage = data.Message;
+                } else if (Array.isArray(data.errors)) {
+                    errorMessage = data.errors.join('\n');
                 }
             } else if (error.message) {
                 errorMessage = error.message;
