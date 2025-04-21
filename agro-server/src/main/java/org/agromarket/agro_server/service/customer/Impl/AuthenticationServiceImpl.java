@@ -201,6 +201,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         JwtAuthenticationResponse jwtAuthenticationResponse = new JwtAuthenticationResponse();
         jwtAuthenticationResponse.setToken(jwt);
         jwtAuthenticationResponse.setRefreshToken(refreshToken);
+        jwtAuthenticationResponse.setRole(user.getRole());
 
         return jwtAuthenticationResponse;
     }
@@ -224,6 +225,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             JwtAuthenticationResponse jwtAuthenticationResponse = new JwtAuthenticationResponse();
             jwtAuthenticationResponse.setToken(jwt);
             jwtAuthenticationResponse.setRefreshToken(refreshToken);
+            jwtAuthenticationResponse.setRole(user.getRole());
 
             log.info("REFRESH TOKEN SUCCESSFULLY! {}", LocalDateTime.now());
             return jwtAuthenticationResponse;
