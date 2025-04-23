@@ -45,7 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
-    final url = Uri.parse('http://10.0.2.2:8083/api/v1/auth/signin');
+    final url = Uri.parse('http://localhost:8083/api/v1/auth/signin');
 
     try {
       final response = await http.post(

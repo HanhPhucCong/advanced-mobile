@@ -54,7 +54,7 @@ public class AdminCategoryService {
         }
     }
     public List<CategoryDTO> getAllCategories() {
-        return categoryRepository.findAllActiveCategories()
+        return categoryRepository.findAll()
                 .stream()
                 .map(CategoryMapper::toCategoryDTO)
                 .collect(Collectors.toList());
