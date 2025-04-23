@@ -1,5 +1,6 @@
 package org.agromarket.agro_server.service.admin;
 
+import org.agromarket.agro_server.common.Role;
 import org.agromarket.agro_server.model.dto.admin.InforUserDTO;
 import org.agromarket.agro_server.model.entity.User;
 import org.agromarket.agro_server.repositories.admin.AdminUserRepository;
@@ -15,7 +16,7 @@ public class AdminUserService {
     private AdminUserRepository adminUserRepository;
 
     public List<InforUserDTO> getAllUser() {
-        List<User> users = adminUserRepository.findAll();
+        List<User> users = adminUserRepository.findByRole(Role.CUSTOMER);
         List<InforUserDTO> inforUserDTOS = new ArrayList<>();
         for (User user : users) {
             InforUserDTO inforUserDTO = new InforUserDTO();
