@@ -1,6 +1,7 @@
 package org.agromarket.agro_server.model.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,6 +19,10 @@ public class CheckoutRequest {
     @NotBlank(message = "Shipping address must be not null!")
     @Size(min = 0, max = 255, message = "Shipping address must be between 0 to 255 characters!")
     private String shippingAddress;
+
+    @NotBlank(message = "Phone number must not be null or blank!")
+    @Pattern(regexp = "^[0-9]{10}$", message = "Phone number must be exactly 10 digits!")
+    private String phoneNumber;
 
     private String note;
 

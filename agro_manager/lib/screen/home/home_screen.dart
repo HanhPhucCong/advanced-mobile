@@ -51,9 +51,8 @@ class _HomeScreenState extends State<HomeScreen> {
         flexibleSpace: Stack(
           fit: StackFit.expand,
           children: [
-            Image.asset(
-              'assets/images/banner.jpg', // Đường dẫn đến ảnh banner
-              fit: BoxFit.cover,
+            Container(
+              color: const Color.fromARGB(255, 181, 197, 217), // Đặt nền màu đỏ
             ),
             Container(
               decoration: const BoxDecoration(

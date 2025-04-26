@@ -58,8 +58,9 @@ const CheckoutScreen = ({ navigation }: any) => {
     const [loading, setLoading] = useState<boolean>(true);
     const [shippingAddress, setShippingAddress] = useState<string>('');
     const [note, setNote] = useState<string>('');
+    const [phoneNumber, setPhoneNumber] = useState<string>(''); // Số điện thoại
     const [isProcessing, setIsProcessing] = useState<boolean>(false);
-    const [errors, setErrors] = useState<{ shippingAddress?: string }>({});
+    const [errors, setErrors] = useState<{ shippingAddress?: string; phoneNumber?: string }>({});
     const [paymentMethod, setPaymentMethod] = useState<'COD' | 'VNPay'>('COD');
 
     const [coupons, setCoupons] = useState<Coupon[]>([]);
@@ -97,13 +98,21 @@ const CheckoutScreen = ({ navigation }: any) => {
 
     const validateForm = () => {
         let valid = true;
-        let newErrors: { shippingAddress?: string } = {};
+        let newErrors: { shippingAddress?: string; phoneNumber?: string } = {};
 
         if (!shippingAddress.trim()) {
             newErrors.shippingAddress = 'Địa chỉ giao hàng không được để trống!';
             valid = false;
         } else if (shippingAddress.length > 255) {
             newErrors.shippingAddress = 'Địa chỉ không được dài quá 255 ký tự!';
+            valid = false;
+        }
+
+        if (!phoneNumber.trim()) {
+            newErrors.phoneNumber = 'Số điện thoại không được để trống!';
+            valid = false;
+        } else if (!/^\d{10}$/.test(phoneNumber)) {
+            newErrors.phoneNumber = 'Số điện thoại phải gồm 10 chữ số!';
             valid = false;
         }
 
@@ -120,6 +129,7 @@ const CheckoutScreen = ({ navigation }: any) => {
             lineItemIds,
             shippingAddress,
             note,
+            phoneNumber, // Thêm số điện thoại vào request
             couponCode: selectedCoupon || undefined,
         };
 
@@ -306,6 +316,16 @@ const CheckoutScreen = ({ navigation }: any) => {
                             onChangeText={setShippingAddress}
                         />
                         {errors.shippingAddress ? <Text style={styles.errorText}>{errors.shippingAddress}</Text> : null}
+
+                        {/* Trường nhập số điện thoại */}
+                        <TextInput
+                            style={[styles.input, errors.phoneNumber && styles.inputError]}
+                            placeholder='Nhập số điện thoại'
+                            value={phoneNumber}
+                            onChangeText={setPhoneNumber}
+                            keyboardType='phone-pad'
+                        />
+                        {errors.phoneNumber ? <Text style={styles.errorText}>{errors.phoneNumber}</Text> : null}
 
                         <TextInput
                             style={styles.input}

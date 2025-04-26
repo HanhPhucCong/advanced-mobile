@@ -19,6 +19,7 @@ public class OrderResponse extends BaseResponseDTO {
     private List<LineItemReponse> lineItems;
     private String shippingAddress;
     private String note;
+    private String phoneNumber;
     private double totalAmount;
     private OrderStatus status;
     private PaymentMethod paymentMethod;

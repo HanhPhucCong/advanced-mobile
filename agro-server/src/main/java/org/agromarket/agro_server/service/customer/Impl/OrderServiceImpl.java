@@ -69,6 +69,7 @@ public class OrderServiceImpl implements OrderService {
         order.setLineItems(lineItems);
         order.setShippingAddress(checkoutRequest.getShippingAddress());
         order.setNote(checkoutRequest.getNote());
+        order.setPhoneNumber(checkoutRequest.getPhoneNumber());
         order.setTotalAmount(totalAmount);
         order.setStatus(OrderStatus.PENDING);
         order.setPaymentMethod(PaymentMethod.COD);
@@ -162,6 +163,7 @@ public class OrderServiceImpl implements OrderService {
         order.setLineItems(lineItems);
         order.setShippingAddress(checkoutRequest.getShippingAddress());
         order.setNote(checkoutRequest.getNote());
+        order.setPhoneNumber(checkoutRequest.getPhoneNumber());
         order.setTotalAmount(totalAmount);
         order.setStatus(OrderStatus.PENDING);
         order.setPaymentMethod(PaymentMethod.WAITING);
@@ -301,7 +303,7 @@ public class OrderServiceImpl implements OrderService {
         if (isApproved) {
             // admin đồng ý hủy -> chuyển trạng thái CANCELED
             order.setStatus(OrderStatus.CANCELED);
-            order.setIsDeleted(true);
+            //order.setIsDeleted(true);
             restock(order.getLineItems());
             log.info("Order has been canceled successfully!");
         } else {
@@ -423,6 +425,16 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NotFoundException("Order not found with id: " + orderId));
         return order.isHasReview();
+    }
+
+    @Override
+    public OrderResponse restore(long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new NotFoundException("Order not found with id: " + orderId));
+        order.setIsActive(true);
+        order.setIsDeleted(false);
+        orderRepository.save(order);
+        return orderMapper.convertToResponse(order);
     }
 
 }
