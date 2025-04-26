@@ -35,6 +35,8 @@ public class Order extends BaseEntity {
     @Column(length = 255)
     private String note;
 
+    private String phoneNumber;
+
     @Column(nullable = false)
     private double totalAmount;
 

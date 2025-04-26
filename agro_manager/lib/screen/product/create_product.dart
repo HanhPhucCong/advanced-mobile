@@ -50,7 +50,10 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
       // Create product and receive created Product with assigned ID
       final Product created = await ApiService.createProduct(newProd);
       // Upload images using real ID
-      final uploaded = await ApiService.uploadProductImages(created.id, _images);
+      final uploaded = await ApiService.uploadProductImages(
+        created.id,
+        _images,
+      );
       created.imageUrls.addAll(uploaded);
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -58,9 +61,9 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
       );
       Navigator.pop(context, true);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Create failed: \$e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Create failed: \$e')));
     } finally {
       setState(() => _loading = false);
     }
@@ -85,132 +88,150 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
         iconTheme: const IconThemeData(color: Colors.black),
         titleTextStyle: const TextStyle(color: Colors.black, fontSize: 20),
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    TextFormField(
-                      controller: _nameCtrl,
-                      decoration: InputDecoration(
-                        labelText: 'Product Name',
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8)),
+      body:
+          _loading
+              ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      TextFormField(
+                        controller: _nameCtrl,
+                        decoration: InputDecoration(
+                          labelText: 'Product Name',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        validator:
+                            (v) =>
+                                v == null || v.isEmpty
+                                    ? 'Enter product name'
+                                    : null,
                       ),
-                      validator: (v) => v == null || v.isEmpty
-                          ? 'Enter product name'
-                          : null,
-                    ),
-                    const SizedBox(height: 16),
+                      const SizedBox(height: 16),
 
-                    GestureDetector(
-                      onTap: _pickImages,
-                      child: DottedBorder(
-                        borderType: BorderType.RRect,
-                        radius: const Radius.circular(8),
-                        dashPattern: const [6, 3],
-                        color: Colors.grey,
-                        child: Container(
-                          height: 120,
-                          alignment: Alignment.center,
-                          child: _images.isEmpty
-                              ? Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: const [
-                                    Icon(Icons.add_a_photo, size: 32),
-                                    SizedBox(height: 8),
-                                    Text('Add Images'),
-                                  ],
-                                )
-                              : ListView.builder(
-                                  scrollDirection: Axis.horizontal,
-                                  itemCount: _images.length,
-                                  itemBuilder: (ctx, i) {
-                                    return Padding(
-                                      padding: const EdgeInsets.only(right: 8),
-                                      child: ClipRRect(
-                                        borderRadius:
-                                            BorderRadius.circular(8),
-                                        child: Image.network(
-                                          _images[i].path,
-                                          width: 100,
-                                          height: 100,
-                                          fit: BoxFit.cover,
-                                        ),
-                                      ),
-                                    );
-                                  },
+                      GestureDetector(
+                        onTap: _pickImages,
+                        child: DottedBorder(
+                          borderType: BorderType.RRect,
+                          radius: const Radius.circular(8),
+                          dashPattern: const [6, 3],
+                          color: Colors.grey,
+                          child: Container(
+                            height: 120,
+                            alignment: Alignment.center,
+                            child:
+                                _images.isEmpty
+                                    ? Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: const [
+                                        Icon(Icons.add_a_photo, size: 32),
+                                        SizedBox(height: 8),
+                                        Text('Add Images'),
+                                      ],
+                                    )
+                                    : ListView.builder(
+                                      scrollDirection: Axis.horizontal,
+                                      itemCount: _images.length,
+                                      itemBuilder: (ctx, i) {
+                                        return Padding(
+                                          padding: const EdgeInsets.only(
+                                            right: 8,
+                                          ),
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                            child: Image.network(
+                                              _images[i].path,
+                                              width: 100,
+                                              height: 100,
+                                              fit: BoxFit.cover,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      TextFormField(
+                        controller: _descCtrl,
+                        decoration: InputDecoration(
+                          labelText: 'Description',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        maxLines: 3,
+                      ),
+                      const SizedBox(height: 16),
+
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: _priceCtrl,
+                              decoration: InputDecoration(
+                                labelText: 'Price',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    TextFormField(
-                      controller: _descCtrl,
-                      decoration: InputDecoration(
-                        labelText: 'Description',
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8)),
-                      ),
-                      maxLines: 3,
-                    ),
-                    const SizedBox(height: 16),
-
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextFormField(
-                            controller: _priceCtrl,
-                            decoration: InputDecoration(
-                              labelText: 'Price',
-                              border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8)),
+                              ),
+                              keyboardType: TextInputType.number,
+                              validator:
+                                  (v) =>
+                                      v == null || double.tryParse(v) == null
+                                          ? 'Enter valid price'
+                                          : null,
                             ),
-                            keyboardType: TextInputType.number,
-                            validator: (v) => v == null ||
-                                    double.tryParse(v) == null
-                                ? 'Enter valid price'
-                                : null,
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: TextFormField(
+                              controller: _qtyCtrl,
+                              decoration: InputDecoration(
+                                labelText: 'Quantity',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              keyboardType: TextInputType.number,
+                              validator:
+                                  (v) =>
+                                      v == null || int.tryParse(v) == null
+                                          ? 'Enter valid quantity'
+                                          : null,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: TextFormField(
-                            controller: _qtyCtrl,
-                            decoration: InputDecoration(
-                              labelText: 'Quantity',
-                              border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8)),
-                            ),
-                            keyboardType: TextInputType.number,
-                            validator: (v) => v == null ||
-                                    int.tryParse(v) == null
-                                ? 'Enter valid quantity'
-                                : null,
-                          ),
+                        onPressed: _submit,
+                        child: const Text(
+                          'Save',
+                          style: TextStyle(fontSize: 16),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
                       ),
-                      onPressed: _submit,
-                      child: const Text('Save', style: TextStyle(fontSize: 16)),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
     );
   }
 }

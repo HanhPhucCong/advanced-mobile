@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import '../home/home_screen.dart';
+import '../../constants/api_constants.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -45,7 +46,8 @@ class _LoginScreenState extends State<LoginScreen> {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
-    final url = Uri.parse('http://localhost:8083/api/v1/auth/signin');
+    //final url = Uri.parse('http://localhost:8083/api/v1/auth/signin');
+    final url = Uri.parse(ApiConstants.login);
 
     try {
       final response = await http.post(
