@@ -161,6 +161,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       _infoRow("Tên người dùng", order.user!.fullName),
                       _infoRow("Email", order.user!.email),
                       _infoRow("Số điện thoại giao hàng", order.phoneNumber),
+                      _infoRow("Địa chỉ giao hàng", order.shippingAddress),
+                      _infoRow("Ghi chú đơn hàng", order.note),
                       const Divider(),
                     ],
 
@@ -172,8 +174,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     ),
                     _infoRow("Tổng tiền", _formatCurrency(order.totalAmount)),
                     _infoRow("Thanh toán", order.paymentMethod),
-                    _infoRow("Địa chỉ giao hàng", order.shippingAddress),
-                    _infoRow("Ghi chú đơn hàng", order.note),
                     _infoRow("Thời gian tạo", _formatDateTime(order.createdAt)),
                     const SizedBox(height: 20),
 
