@@ -269,23 +269,26 @@ const CheckoutScreen = ({ navigation }: any) => {
                         {coupons.length > 0 && (
                             <View style={styles.couponContainer}>
                                 <Text style={styles.paymentLabel}>Chọn mã giảm giá:</Text>
-                                {coupons.map((coupon) => (
-                                    <TouchableOpacity
-                                        key={coupon.id}
-                                        style={[
-                                            styles.couponItem,
-                                            selectedCoupon === coupon.code && styles.selectedCouponItem,
-                                        ]}
-                                        onPress={() =>
-                                            setSelectedCoupon(selectedCoupon === coupon.code ? null : coupon.code)
-                                        }
-                                    >
-                                        <Text style={styles.couponText}>
-                                            {coupon.code} - Giảm {coupon.discountValue}% (đơn từ{' '}
-                                            {coupon.minimumOrderAmount.toLocaleString()}đ)
-                                        </Text>
-                                    </TouchableOpacity>
-                                ))}
+                                {coupons
+                                    .filter((coupon) => getTotalPrice() >= coupon.minimumOrderAmount) // lọc trước
+                                    .map((coupon) => (
+                                        <TouchableOpacity
+                                            key={coupon.id}
+                                            style={[
+                                                styles.couponItem,
+                                                selectedCoupon === coupon.code && styles.selectedCouponItem,
+                                            ]}
+                                            onPress={() =>
+                                                setSelectedCoupon(selectedCoupon === coupon.code ? null : coupon.code)
+                                            }
+                                        >
+                                            <Text style={styles.couponText}>
+                                                {coupon.code} - Giảm {coupon.discountValue}
+                                                {coupon.type === 'PERCENTAGE' ? '%' : 'đ'} (Đơn từ{' '}
+                                                {coupon.minimumOrderAmount.toLocaleString()}đ)
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
                             </View>
                         )}
 
