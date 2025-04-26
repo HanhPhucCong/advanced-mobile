@@ -13,6 +13,7 @@ import org.agromarket.agro_server.model.dto.response.OrderResponse;
 import org.agromarket.agro_server.model.entity.*;
 import org.agromarket.agro_server.repositories.customer.*;
 import org.agromarket.agro_server.service.customer.CouponService;
+import org.agromarket.agro_server.service.customer.MailService;
 import org.agromarket.agro_server.service.customer.NotificationService;
 import org.agromarket.agro_server.service.customer.OrderService;
 import org.agromarket.agro_server.util.mapper.OrderMapper;
@@ -40,6 +41,7 @@ public class OrderServiceImpl implements OrderService {
     private final LineItemRepository lineItemRepository;
     private final CouponService couponService;
     private final NotificationService notificationService;
+    private final MailService mailService;
 
     @Override
     public OrderResponse checkoutByCOD(CheckoutRequest checkoutRequest) {
@@ -132,7 +134,15 @@ public class OrderServiceImpl implements OrderService {
         notification.setCreatedDate(LocalDateTime.now());
         notification.setUser(order.getUser());
         notificationService.createAndSendNotification(notification);
-        return orderMapper.convertToResponse(order);
+
+        OrderResponse response = orderMapper.convertToResponse(order);
+
+        // gui mail
+        String toEmail = order.getUser().getEmail();
+        String userName = order.getUser().getFullName();
+        mailService.sendMailConfirmOrder(toEmail, userName, response, "OrderConfirmation");
+
+        return response;
     }
 
     @Override
@@ -335,9 +345,11 @@ public class OrderServiceImpl implements OrderService {
         User user = (User) authentication.getPrincipal();
 
         return orderRepository.getByUserIdAndIsActiveTrue(user.getId()).stream()
+                .sorted((o1, o2) -> o2.getCreatedAt().compareTo(o1.getCreatedAt())) // sort: mới nhất trước
                 .map(orderMapper::convertToResponse)
                 .toList();
     }
+
 
     @Override
     public OrderResponse getById(long orderId) {

@@ -1,6 +1,6 @@
 class ApiConstants {
-  static const String baseUrl = "http://localhost:8083";
-  // static const String baseUrl = "http://10.0.2.2:8083";
+  // static const String baseUrl = "http://localhost:8083";
+  static const String baseUrl = "http://10.0.2.2:8083";
 
   // ================== Auth APIs ==================
   static const String login = "$baseUrl/api/v1/auth/signin"; // POST

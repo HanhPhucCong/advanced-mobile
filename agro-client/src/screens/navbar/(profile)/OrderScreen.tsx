@@ -211,7 +211,7 @@ const OrderDetailScreen = ({ navigation, route }: any) => {
                                     })
                                 }
                             >
-                                <Text style={styles.reviewButtonText}>Review</Text>
+                                <Text style={styles.reviewButtonText}>Review now and get 1000 coins!</Text>
                             </TouchableOpacity>
                         ) : (
                             <Text style={styles.reviewedText}>Đơn hàng đã được review</Text>
