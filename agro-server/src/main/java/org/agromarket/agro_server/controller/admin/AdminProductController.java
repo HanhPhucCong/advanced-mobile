@@ -1,5 +1,6 @@
 package org.agromarket.agro_server.controller.admin;
 
+import org.agromarket.agro_server.model.dto.admin.ProductCreateDTO;
 import org.agromarket.agro_server.model.dto.admin.ProductDTO;
 import org.agromarket.agro_server.model.entity.Product;
 import org.agromarket.agro_server.service.admin.AdminProductService;
@@ -31,8 +32,9 @@ public class AdminProductController {
     }
 
     @PostMapping
-    public ResponseEntity<Product> createProduct(@RequestBody Product product) {
-        return ResponseEntity.ok(productService.createProduct(product));
+    public ResponseEntity<String> createProduct(@RequestBody ProductCreateDTO dto) {
+        productService.createProduct(dto);
+        return ResponseEntity.ok("Product tạo thành công ");
     }
     @PatchMapping("/restore/{id}")
     public ResponseEntity<String> restoreCategory(@PathVariable Long id) {
@@ -40,8 +42,9 @@ public class AdminProductController {
         return ResponseEntity.ok("Product with ID " + id + " has been restored.");
     }
     @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody Product product) {
-        return ResponseEntity.ok(productService.updateProduct(id, product));
+    public ResponseEntity<String> updateProduct(@PathVariable Long id, @RequestBody ProductCreateDTO product) {
+        productService.updateProduct(id, product);
+        return ResponseEntity.ok("Product cập nhật thành công ");
     }
 
     @DeleteMapping("/{id}")

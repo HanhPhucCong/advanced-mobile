@@ -1,5 +1,11 @@
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dotted_border/dotted_border.dart';
+
 import '../../models/product.dart';
 import '../../service/api_service.dart';
 
@@ -7,23 +13,36 @@ class UpdateProductScreen extends StatefulWidget {
   const UpdateProductScreen({Key? key}) : super(key: key);
 
   @override
-  _UpdateProductScreenState createState() => _UpdateProductScreenState();
+  State<UpdateProductScreen> createState() => _UpdateProductScreenState();
 }
 
 class _UpdateProductScreenState extends State<UpdateProductScreen> {
   final _formKey = GlobalKey<FormState>();
-  bool _isLoading = true;
-  late int _productId;
-  Product? _product;
-
-  final _nameController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  final _priceController = TextEditingController();
-  final _quantityController = TextEditingController();
+  final _nameCtrl = TextEditingController();
+  final _descCtrl = TextEditingController();
+  final _priceCtrl = TextEditingController();
+  final _qtyCtrl = TextEditingController();
 
   final ImagePicker _picker = ImagePicker();
   List<XFile> _newImages = [];
   List<String> _existingImageUrls = [];
+
+  bool _isLoading = true;
+  late int _productId;
+  Product? _product;
+
+  List<Map<String, dynamic>> _categories = [];
+  int? _selectedCategoryId;
+
+  final List<String> _units = ['PIECE', 'KILOGRAM', 'GRAM'];
+  String? _selectedUnit;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchCategories();
+    _selectedUnit = _units.first;
+  }
 
   @override
   void didChangeDependencies() {
@@ -37,86 +56,163 @@ class _UpdateProductScreenState extends State<UpdateProductScreen> {
         setState(() => _isLoading = false);
       } else if (args is int) {
         _productId = args;
-        _fetchProduct();
+        _fetchProductById();
       }
     }
   }
 
-  Future<void> _fetchProduct() async {
+  Future<void> _fetchProductById() async {
     try {
-      final product = await ApiService.fetchProductById(_productId);
-      _product = product;
+      final prod = await ApiService.fetchProductById(_productId);
+      _product = prod;
       _populateFields();
     } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Error fetching product: \$e')));
+      ).showSnackBar(SnackBar(content: Text('Error fetching product: $e')));
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
   void _populateFields() {
-    _nameController.text = _product?.name ?? '';
-    _descriptionController.text = _product?.description ?? '';
-    _priceController.text = _product?.price.toString() ?? '';
-    _quantityController.text = _product?.quantity.toString() ?? '';
-    _existingImageUrls = List.from(_product?.imageUrls ?? []);
+    if (_product == null) return;
+    _nameCtrl.text = _product!.name;
+    _descCtrl.text = _product!.description;
+    _priceCtrl.text = _product!.price.toString();
+    _qtyCtrl.text = _product!.quantity.toString();
+    _existingImageUrls = List.from(_product!.imageUrls);
+    _selectedUnit = _product!.unit;
+    _selectedCategoryId = _product!.categoryId;
+  }
+
+  Future<void> _fetchCategories() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final rawToken = prefs.getString('token');
+      if (rawToken == null) return;
+      final auth =
+          rawToken.startsWith('Bearer ') ? rawToken : 'Bearer $rawToken';
+      final dio = Dio(
+        BaseOptions(
+          headers: {'Authorization': auth},
+          validateStatus: (s) => s! < 500,
+        ),
+      );
+      final resp = await dio.get('http://10.0.2.2:8083/admin/categories');
+      if (resp.statusCode == 200) {
+        setState(() {
+          _categories = List<Map<String, dynamic>>.from(resp.data);
+          _selectedCategoryId ??= _categories.first['id'] as int;
+        });
+      }
+    } catch (_) {}
   }
 
   Future<void> _pickImages() async {
-    final picked = await _picker.pickMultiImage();
+    final picked = await _picker.pickMultiImage(imageQuality: 80);
     if (picked != null && picked.isNotEmpty) {
-      setState(() {
-        _newImages.addAll(picked);
-      });
+      setState(() => _newImages.addAll(picked));
     }
   }
 
   Future<void> _updateProduct() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
-    try {
-      final updated = Product(
-        id: _productId,
-        name: _nameController.text,
-        description: _descriptionController.text,
-        price: double.parse(_priceController.text),
-        quantity: int.parse(_quantityController.text),
-        imageUrls: _existingImageUrls,
-      );
-      await ApiService.updateProduct(updated);
 
+    try {
       if (_newImages.isNotEmpty) {
-        final uploadedUrls = await ApiService.uploadProductImages(
-          _productId,
-          _newImages,
-        );
-        _existingImageUrls.addAll(uploadedUrls);
-        await ApiService.updateProduct(
-          updated.copyWith(imageUrls: _existingImageUrls),
-        );
+        final uploaded = await _uploadImages(_newImages);
+        for (var url in uploaded) {
+          if (!_existingImageUrls.contains(url)) {
+            _existingImageUrls.add(url);
+          }
+        }
+          _newImages.clear();
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Product updated successfully!')),
+      final payload = {
+        'name': _nameCtrl.text.trim(),
+        'description': _descCtrl.text.trim(),
+        'price': double.parse(_priceCtrl.text),
+        'quantity': int.parse(_qtyCtrl.text),
+        'unit': _selectedUnit,
+        'categoryId': _selectedCategoryId,
+        'imageUrls': _existingImageUrls,
+      };
+
+      final prefs = await SharedPreferences.getInstance();
+      final rawToken = prefs.getString('token')!;
+      final auth =
+          rawToken.startsWith('Bearer ') ? rawToken : 'Bearer $rawToken';
+      final dio = Dio(
+        BaseOptions(
+          headers: {'Authorization': auth},
+          validateStatus: (s) => s! < 500,
+        ),
       );
-      Navigator.of(context).pop(true);
+
+      final resp = await dio.put(
+        'http://10.0.2.2:8083/admin/products/$_productId',
+        data: payload,
+      );
+
+      if (resp.statusCode! >= 200 && resp.statusCode! < 300) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('🎉 Product updated successfully!')),
+        );
+        Navigator.of(context).pop(true);
+      } else {
+        throw Exception('Server error ${resp.statusCode}');
+      }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Update failed: \$e')));
+      ).showSnackBar(SnackBar(content: Text('❌ Update failed: $e')));
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
+  Future<List<String>> _uploadImages(List<XFile> images) async {
+    final prefs = await SharedPreferences.getInstance();
+    final rawToken = prefs.getString('token');
+    if (rawToken == null || rawToken.isEmpty)
+      throw Exception('Token not found');
+    final auth = rawToken.startsWith('Bearer ') ? rawToken : 'Bearer $rawToken';
+    final dio = Dio(
+      BaseOptions(
+        headers: {'Authorization': auth},
+        validateStatus: (s) => s! < 500,
+      ),
+    );
+    const uploadUrl = 'http://10.0.2.2:8083/api/file/image/upload';
+    final urls = <String>[];
+    for (var img in images) {
+      final fileName = img.path.split('/').last;
+      final form = FormData.fromMap({
+        'file': await MultipartFile.fromFile(img.path, filename: fileName),
+      });
+      final resp = await dio.post(uploadUrl, data: form);
+      if (resp.statusCode == 200) {
+        final data = resp.data['data'] as Map<String, dynamic>?;
+        String? url = data?['secure_url'] ?? data?['url'];
+        if (url != null) urls.add(url);
+      } else {
+        throw Exception('Upload failed ${resp.statusCode}');
+      }
+    }
+    return urls;
+  }
+
   @override
   void dispose() {
-    _nameController.dispose();
-    _descriptionController.dispose();
-    _priceController.dispose();
-    _quantityController.dispose();
+    _nameCtrl.dispose();
+    _descCtrl.dispose();
+    _priceCtrl.dispose();
+    _qtyCtrl.dispose();
     super.dispose();
   }
 
@@ -125,10 +221,15 @@ class _UpdateProductScreenState extends State<UpdateProductScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Update Product'),
+        centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 1,
         iconTheme: const IconThemeData(color: Colors.black),
-        titleTextStyle: const TextStyle(color: Colors.black, fontSize: 20),
+        titleTextStyle: const TextStyle(
+          color: Colors.black,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
       ),
       body:
           _isLoading
@@ -140,230 +241,152 @@ class _UpdateProductScreenState extends State<UpdateProductScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Name Field
-                      TextFormField(
-                        controller: _nameController,
-                        decoration: InputDecoration(
-                          labelText: 'Product Name',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        validator:
-                            (v) =>
-                                v == null || v.isEmpty
-                                    ? 'Enter product name'
-                                    : null,
+                      _buildTextField(
+                        _nameCtrl,
+                        'Product Name',
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty)
+                            return 'Enter product name';
+                          return null;
+                        },
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 16),
 
-                      // Image Carousel
-                      SizedBox(
-                        height: 150,
-                        child: ListView(
-                          scrollDirection: Axis.horizontal,
-                          children: [
-                            // 1. Add Images button ở đầu
-                            GestureDetector(
-                              onTap: _pickImages,
-                              child: Container(
-                                width: 150,
-                                margin: const EdgeInsets.only(right: 12),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[200],
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Colors.grey),
-                                ),
-                                child: Center(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: const [
-                                      Icon(
-                                        Icons.add_a_photo,
-                                        size: 36,
-                                        color: Colors.grey,
-                                      ),
-                                      SizedBox(height: 8),
-                                      Text(
-                                        'Add Images',
-                                        style: TextStyle(color: Colors.grey),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
+                      // Image picker + carousel
+                      GestureDetector(
+                        onTap: _pickImages,
+                        child: DottedBorder(
+                          borderType: BorderType.RRect,
+                          radius: const Radius.circular(12),
+                          dashPattern: const [6, 3],
+                          color: Colors.grey,
+                          child: Container(
+                            height: 140,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
                             ),
-
-                            // 2. Existing Images
-                            for (var url in _existingImageUrls)
-                              Container(
-                                margin: const EdgeInsets.only(right: 12),
-                                width: 150,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(8),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black12,
-                                      blurRadius: 4,
-                                      offset: Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Image.network(url, fit: BoxFit.cover),
-                                ),
-                              ),
-
-                            // 3. New Picked Images
-                            for (var file in _newImages)
-                              Container(
-                                margin: const EdgeInsets.only(right: 12),
-                                width: 150,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(8),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black12,
-                                      blurRadius: 4,
-                                      offset: Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Image.network(
-                                    file.path,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                              ),
-
-                            // 4. View More button ở cuối
-                            GestureDetector(
-                              onTap: () {
-                                showDialog(
-                                  context: context,
-                                  builder:
-                                      (_) => AlertDialog(
-                                        title: const Text('All Images'),
-                                        content: SizedBox(
-                                          width: double.maxFinite,
-                                          child: ListView(
-                                            children: [
-                                              ..._existingImageUrls.map(
-                                                (url) => Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                        bottom: 8,
-                                                      ),
-                                                  child: Image.network(url),
-                                                ),
+                            child:
+                                _existingImageUrls.isEmpty && _newImages.isEmpty
+                                    ? Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: const [
+                                        Icon(Icons.add_a_photo, size: 36),
+                                        SizedBox(height: 8),
+                                        Text('Tap to add images'),
+                                      ],
+                                    )
+                                    : ListView(
+                                      scrollDirection: Axis.horizontal,
+                                      children: [
+                                        // nút thêm ảnh luôn hiện
+                                        GestureDetector(
+                                          onTap: _pickImages,
+                                          child: Container(
+                                            width: 120,
+                                            margin: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: Colors.grey[200],
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              border: Border.all(
+                                                color: Colors.grey,
                                               ),
-                                              ..._newImages.map(
-                                                (file) => Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                        bottom: 8,
-                                                      ),
-                                                  child: Image.network(
-                                                    file.path,
-                                                  ),
-                                                ),
+                                            ),
+                                            child: const Center(
+                                              child: Icon(
+                                                Icons.add_a_photo,
+                                                size: 36,
+                                                color: Colors.grey,
                                               ),
-                                            ],
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                );
-                              },
-                              child: Container(
-                                width: 150,
-                                margin: const EdgeInsets.only(right: 12),
-                                decoration: BoxDecoration(
-                                  color: Colors.blue[50],
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Colors.blue),
-                                ),
-                                child: const Center(
-                                  child: Text(
-                                    'Xem thêm',
-                                    style: TextStyle(color: Colors.blue),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                                        // hiển thị ảnh cũ
+                                        ..._existingImageUrls.map(
+                                          (url) => _buildNetworkImage(url),
+                                        ),
+                                        // hiển thị ảnh mới vừa pick
+                                        ..._newImages.map(
+                                          (f) => _buildMemoryImage(f),
+                                        ),
+                                      ],
+                                    ),
+                          ),
                         ),
                       ),
                       const SizedBox(height: 24),
 
-                      // Description Field
-                      TextFormField(
-                        controller: _descriptionController,
-                        decoration: InputDecoration(
-                          labelText: 'Description',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        maxLines: 4,
+                      _buildDropdown<String>(
+                        label: 'Unit',
+                        value: _selectedUnit,
+                        items: _units,
+                        onChanged: (v) => setState(() => _selectedUnit = v),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 16),
 
-                      // Price & Quantity
+                      _buildDropdown<int>(
+                        label: 'Category',
+                        value: _selectedCategoryId,
+                        items:
+                            _categories
+                                .map((c) => c['name'] as String)
+                                .toList(),
+                        itemIds:
+                            _categories.map((c) => c['id'] as int).toList(),
+                        onChanged:
+                            (v) => setState(() => _selectedCategoryId = v),
+                      ),
+                      const SizedBox(height: 24),
+
+                      _buildTextField(_descCtrl, 'Description', maxLines: 3),
+                      const SizedBox(height: 16),
+
                       Row(
                         children: [
                           Expanded(
-                            child: TextFormField(
-                              controller: _priceController,
-                              decoration: InputDecoration(
-                                labelText: 'Price',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
+                            child: _buildTextField(
+                              _priceCtrl,
+                              'Price',
                               keyboardType: TextInputType.number,
-                              validator:
-                                  (v) =>
-                                      v == null || double.tryParse(v) == null
-                                          ? 'Enter valid price'
-                                          : null,
+                              validator: (v) {
+                                if (v == null || double.tryParse(v) == null)
+                                  return 'Enter valid price';
+                                return null;
+                              },
                             ),
                           ),
                           const SizedBox(width: 16),
                           Expanded(
-                            child: TextFormField(
-                              controller: _quantityController,
-                              decoration: InputDecoration(
-                                labelText: 'Quantity',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
+                            child: _buildTextField(
+                              _qtyCtrl,
+                              'Quantity',
                               keyboardType: TextInputType.number,
-                              validator:
-                                  (v) =>
-                                      v == null || int.tryParse(v) == null
-                                          ? 'Enter valid quantity'
-                                          : null,
+                              validator: (v) {
+                                if (v == null || int.tryParse(v) == null)
+                                  return 'Enter valid quantity';
+                                return null;
+                              },
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 30),
 
-                      // Save Button
                       ElevatedButton(
+                        onPressed: _updateProduct,
                         style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blueAccent,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        onPressed: _updateProduct,
                         child: const Text(
-                          'Save',
+                          'Save Product',
                           style: TextStyle(fontSize: 16),
                         ),
                       ),
@@ -373,22 +396,82 @@ class _UpdateProductScreenState extends State<UpdateProductScreen> {
               ),
     );
   }
-}
 
-extension on Product {
-  Product copyWith({
-    int? id,
-    String? name,
-    String? description,
-    double? price,
-    int? quantity,
-    List<String>? imageUrls,
-  }) => Product(
-    id: id ?? this.id,
-    name: name ?? this.name,
-    description: description ?? this.description,
-    price: price ?? this.price,
-    quantity: quantity ?? this.quantity,
-    imageUrls: imageUrls ?? this.imageUrls,
-  );
+  Widget _buildTextField(
+    TextEditingController ctrl,
+    String label, {
+    int maxLines = 1,
+    TextInputType? keyboardType,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: ctrl,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      maxLines: maxLines,
+      keyboardType: keyboardType,
+      validator: validator,
+    );
+  }
+
+  Widget _buildDropdown<T>({
+    required String label,
+    required T? value,
+    required List items,
+    List<T>? itemIds,
+    required void Function(T?) onChanged,
+  }) {
+    return DropdownButtonFormField<T>(
+      value: value,
+      items: List.generate(items.length, (i) {
+        final id = itemIds != null ? itemIds[i] : items[i] as T;
+        return DropdownMenuItem<T>(value: id, child: Text('${items[i]}'));
+      }),
+      onChanged: onChanged,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      validator: (v) => v == null ? 'Please select $label' : null,
+    );
+  }
+
+  Widget _buildNetworkImage(String url) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Image.network(url, width: 120, height: 120, fit: BoxFit.cover),
+      ),
+    );
+  }
+
+  Widget _buildMemoryImage(XFile file) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: FutureBuilder<Uint8List>(
+          future: file.readAsBytes(),
+          builder: (_, snap) {
+            if (snap.connectionState == ConnectionState.done && snap.hasData) {
+              return Image.memory(
+                snap.data!,
+                width: 120,
+                height: 120,
+                fit: BoxFit.cover,
+              );
+            }
+            return const SizedBox(
+              width: 120,
+              height: 120,
+              child: Center(child: CircularProgressIndicator()),
+            );
+          },
+        ),
+      ),
+    );
+  }
 }

@@ -7,7 +7,7 @@ class ApiConstants {
 
   // ================== Product APIs ==================
   static const String getAllProducts =
-      "$baseUrl/api/public/products/all-active"; // GET
+      "$baseUrl/api/public/products/all"; // GET
   static const String getDetailProduct = "$baseUrl/api/public/products/"; // GET
   static const String createProduct = "$baseUrl/api/products"; // POST
   static const String updateProduct = "$baseUrl/products"; // PUT
