@@ -40,6 +40,19 @@ public class ProductController {
 
     return ResponseEntity.ok(new BaseResponse("Get all active successfully!", 200, products));
   }
+  @GetMapping("/public/products/all")
+  public ResponseEntity<BaseResponse> getAll(
+          @RequestParam(defaultValue = "0") int page,
+          @RequestParam(defaultValue = "20") int size,
+          @RequestParam(defaultValue = "id") String sortBy,
+          @RequestParam(defaultValue = "asc") String direction) {
+
+    Pageable pageable =
+            PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(direction), sortBy));
+    Page<ProductResponse> products = productService.getAllActive(pageable);
+
+    return ResponseEntity.ok(new BaseResponse("Get all active successfully!", 200, products));
+  }
 
   @GetMapping("/public/products/category/{categoryId}")
   public ResponseEntity<BaseResponse> getProductByCategory(

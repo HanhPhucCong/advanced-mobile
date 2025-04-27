@@ -1,10 +1,13 @@
 package org.agromarket.agro_server.service.admin;
 
+import jakarta.persistence.EntityNotFoundException;
+import org.agromarket.agro_server.model.dto.admin.ProductCreateDTO;
 import org.agromarket.agro_server.model.dto.admin.ProductDTO;
 import org.agromarket.agro_server.mapper.ProductMapper;
 import org.agromarket.agro_server.model.entity.Category;
 import org.agromarket.agro_server.model.entity.Product;
 import org.agromarket.agro_server.model.entity.ProductImage;
+import org.agromarket.agro_server.repositories.admin.AdminCategoryRepository;
 import org.agromarket.agro_server.repositories.admin.AdminProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,10 +19,12 @@ import java.util.stream.Collectors;
 public class AdminProductService {
 
     private final AdminProductRepository productRepository;
+    private final AdminCategoryRepository categoryRepository;
 
     @Autowired
-    public AdminProductService(AdminProductRepository productRepository) {
+    public AdminProductService(AdminProductRepository productRepository, AdminCategoryRepository categoryRepository) {
         this.productRepository = productRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     public List<ProductDTO> getAllProducts() {
@@ -35,14 +40,31 @@ public class AdminProductService {
         return ProductMapper.toProductDTO(product);
     }
 
-    public Product createProduct(Product product) {
-        if (product.getImages() != null) {
-            product.getImages().forEach(image -> image.setProduct(product));
+    public Product createProduct(ProductCreateDTO dto) {
+        Category cat = categoryRepository.findById(dto.getCategoryId())
+                .orElseThrow(() -> new EntityNotFoundException("Category not found"));
+
+        Product p = new Product();
+        p.setName(dto.getName());
+        p.setDescription(dto.getDescription());
+        p.setPrice(dto.getPrice());
+        p.setQuantity(dto.getQuantity());
+        p.setUnit(dto.getUnit());
+        p.setCategory(cat);
+
+        // xử lý images
+        if (dto.getImageUrls() != null) {
+            dto.getImageUrls().forEach(url -> {
+                ProductImage img = new ProductImage();
+                img.setUrl(url);
+                p.addImage(img);
+            });
         }
-        return productRepository.save(product);
+
+        return productRepository.save(p);
     }
 
-    public Product updateProduct(Long id, Product product) {
+    public Product updateProduct(Long id, ProductCreateDTO product) {
         Product existingProduct = productRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found with id: " + id));
 
@@ -51,15 +73,18 @@ public class AdminProductService {
         existingProduct.setPrice(product.getPrice());
         existingProduct.setQuantity(product.getQuantity());
         existingProduct.setUnit(product.getUnit());
-        existingProduct.setCategory(product.getCategory());
 
-        List<ProductImage> newImages = product.getImages();
-        existingProduct.getImages().clear();
-        newImages.forEach(image -> {
-            image.setProduct(existingProduct);
-            existingProduct.getImages().add(image);
-        });
+        Category cat = categoryRepository.findById(product.getCategoryId())
+                .orElseThrow(() -> new EntityNotFoundException("Category not found"));
 
+        existingProduct.setCategory(cat);
+        if (product.getImageUrls() != null) {
+            product.getImageUrls().forEach(url -> {
+                ProductImage img = new ProductImage();
+                img.setUrl(url);
+                existingProduct.addImage(img);
+            });
+        }
         return productRepository.save(existingProduct);
     }
     public void restoreProduct(Long id) {
