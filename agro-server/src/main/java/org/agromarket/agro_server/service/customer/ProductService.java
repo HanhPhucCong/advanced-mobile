@@ -10,6 +10,7 @@ public interface ProductService {
   public ProductResponse create(ProductRequest productRequest);
 
   public Page<ProductResponse> getAllActive(Pageable pageable);
+  public Page<ProductResponse> getAll(Pageable pageable);
 
   Page<ProductResponse> getProductByCategory(Long categoryId, Pageable pageable);
 

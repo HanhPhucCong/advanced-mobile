@@ -49,7 +49,7 @@ public class ProductController {
 
     Pageable pageable =
             PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(direction), sortBy));
-    Page<ProductResponse> products = productService.getAllActive(pageable);
+    Page<ProductResponse> products = productService.getAll(pageable);
 
     return ResponseEntity.ok(new BaseResponse("Get all active successfully!", 200, products));
   }

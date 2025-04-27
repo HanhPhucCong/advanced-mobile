@@ -7,6 +7,8 @@ class Product {
   final String unit;
   final int categoryId;
   final List<String> imageUrls;
+  final bool isActive;
+  final bool isDeleted;
 
   Product({
     required this.id,
@@ -17,6 +19,8 @@ class Product {
     required this.unit,
     required this.categoryId,
     required this.imageUrls,
+    required this.isActive,
+    required this.isDeleted,
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
@@ -29,6 +33,8 @@ class Product {
       unit: json['unit'] as String,
       categoryId: json['categoryId'] as int,
       imageUrls: List<String>.from(json['imageUrls'] ?? []),
+      isActive: json['isActive'] as bool? ?? false,
+      isDeleted: json['isDeleted'] as bool? ?? false,
     );
   }
 }
