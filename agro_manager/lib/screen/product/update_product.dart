@@ -22,6 +22,8 @@ class _UpdateProductScreenState extends State<UpdateProductScreen> {
   final _descCtrl = TextEditingController();
   final _priceCtrl = TextEditingController();
   final _qtyCtrl = TextEditingController();
+  bool _isActive = true;
+  bool _isDeleted = false;
 
   final ImagePicker _picker = ImagePicker();
   List<XFile> _newImages = [];
@@ -84,6 +86,8 @@ class _UpdateProductScreenState extends State<UpdateProductScreen> {
     _existingImageUrls = List.from(_product!.imageUrls);
     _selectedUnit = _product!.unit;
     _selectedCategoryId = _product!.categoryId;
+    _isActive = _product!.isActive;
+    _isDeleted = _product!.isDeleted;
   }
 
   Future<void> _fetchCategories() async {
@@ -128,7 +132,7 @@ class _UpdateProductScreenState extends State<UpdateProductScreen> {
             _existingImageUrls.add(url);
           }
         }
-          _newImages.clear();
+        _newImages.clear();
       }
 
       final payload = {
@@ -207,6 +211,56 @@ class _UpdateProductScreenState extends State<UpdateProductScreen> {
     return urls;
   }
 
+  Future<void> _toggleActive() async {
+    setState(() => _isLoading = true);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final rawToken = prefs.getString('token')!;
+      final auth =
+          rawToken.startsWith('Bearer ') ? rawToken : 'Bearer $rawToken';
+      final dio = Dio(
+        BaseOptions(
+          headers: {'Authorization': auth},
+          validateStatus: (s) => s! < 500,
+        ),
+      );
+
+      late Response resp;
+      final deleteUrl = 'http://10.0.2.2:8083/admin/products/$_productId';
+      final restoreUrl =
+          'http://10.0.2.2:8083/admin/products/restore/$_productId';
+
+      if (_isActive) {
+        resp = await dio.delete(deleteUrl);
+      } else {
+        resp = await dio.patch(restoreUrl);
+      }
+
+      if (resp.statusCode! >= 200 && resp.statusCode! < 300) {
+        setState(() => _isActive = !_isActive);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              _isActive
+                  ? '✅ Product đã được khôi phục!'
+                  : '🗑️ Product đã được xóa mềm!',
+            ),
+          ),
+        );
+      } else {
+        throw Exception('Server lỗi: ${resp.statusCode}');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('❌ Lỗi: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   @override
   void dispose() {
     _nameCtrl.dispose();
@@ -251,8 +305,6 @@ class _UpdateProductScreenState extends State<UpdateProductScreen> {
                         },
                       ),
                       const SizedBox(height: 16),
-
-                      // Image picker + carousel
                       GestureDetector(
                         onTap: _pickImages,
                         child: DottedBorder(
@@ -280,7 +332,6 @@ class _UpdateProductScreenState extends State<UpdateProductScreen> {
                                     : ListView(
                                       scrollDirection: Axis.horizontal,
                                       children: [
-                                        // nút thêm ảnh luôn hiện
                                         GestureDetector(
                                           onTap: _pickImages,
                                           child: Container(
@@ -305,11 +356,9 @@ class _UpdateProductScreenState extends State<UpdateProductScreen> {
                                             ),
                                           ),
                                         ),
-                                        // hiển thị ảnh cũ
                                         ..._existingImageUrls.map(
                                           (url) => _buildNetworkImage(url),
                                         ),
-                                        // hiển thị ảnh mới vừa pick
                                         ..._newImages.map(
                                           (f) => _buildMemoryImage(f),
                                         ),
@@ -319,6 +368,25 @@ class _UpdateProductScreenState extends State<UpdateProductScreen> {
                         ),
                       ),
                       const SizedBox(height: 24),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          const Text(
+                            'Status: ',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Chip(
+                            label: Text(
+                              _isActive ? 'Active' : 'Deleted',
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                            backgroundColor:
+                                _isActive ? Colors.green : Colors.red,
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 16),
 
                       _buildDropdown<String>(
                         label: 'Unit',
@@ -388,6 +456,23 @@ class _UpdateProductScreenState extends State<UpdateProductScreen> {
                         child: const Text(
                           'Save Product',
                           style: TextStyle(fontSize: 16),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      ElevatedButton(
+                        onPressed: _isLoading ? null : _toggleActive,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              _isActive ? Colors.redAccent : Colors.green,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(
+                          _isActive ? 'Deactivate Product' : 'Restore Product',
+                          style: const TextStyle(fontSize: 16),
                         ),
                       ),
                     ],

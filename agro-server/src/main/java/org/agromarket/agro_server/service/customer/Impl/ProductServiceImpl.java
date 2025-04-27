@@ -45,7 +45,11 @@ public class ProductServiceImpl implements ProductService {
     Page<Product> products = productRepository.getAllByIsActiveTrueAndIsDeletedFalse(pageable);
     return products.map(productMapper::convertToReponse);
   }
-
+  @Override
+  public Page<ProductResponse> getAll(Pageable pageable) {
+    Page<Product> products = productRepository.findAll(pageable);
+    return products.map(productMapper::convertToReponse);
+  }
   @Override
   public Page<ProductResponse> getProductByCategory(Long categoryId, Pageable pageable) {
     Category category =

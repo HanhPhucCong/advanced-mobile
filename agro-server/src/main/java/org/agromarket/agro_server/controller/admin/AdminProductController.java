@@ -48,9 +48,9 @@ public class AdminProductController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
+    public ResponseEntity<String> deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok("Product xóa thành công ");
     }
     @PatchMapping("/{id}/add-quantity")
     public ResponseEntity<Product> addProductQuantity(@PathVariable Long id, @RequestParam int addedQuantity) {
