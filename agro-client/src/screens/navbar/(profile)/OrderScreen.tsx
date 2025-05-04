@@ -11,6 +11,7 @@ import {
     SafeAreaView,
     Alert,
 } from 'react-native';
+import { showMessage } from 'react-native-flash-message';
 import orderService from '../../../service/api/orderService';
 import productService from '../../../service/api/productService';
 import Icon from 'react-native-vector-icons/AntDesign';
@@ -136,10 +137,18 @@ const OrderDetailScreen = ({ navigation, route }: any) => {
     const handleCancelOrder = async () => {
         try {
             const response = await orderService.cancelOrder(orderId);
-            Alert.alert('Thông báo', response.data.message || 'Hủy đơn hàng thành công!');
+            showMessage({
+                message: 'Thành công',
+                description: response.data.message || 'Hủy đơn hàng thành công!',
+                type: 'success',
+            });
             fetchOrderDetail();
         } catch (error: any) {
-            Alert.alert('Lỗi', error.response?.data?.message || 'Có lỗi xảy ra khi hủy đơn hàng.');
+            showMessage({
+                message: 'Lỗi',
+                description: error.response?.data?.message || 'Có lỗi xảy ra khi hủy đơn hàng.',
+                type: 'danger',
+            });
         }
     };
 

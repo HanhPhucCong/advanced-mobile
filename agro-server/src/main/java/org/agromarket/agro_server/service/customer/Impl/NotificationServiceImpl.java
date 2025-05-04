@@ -4,6 +4,7 @@ import org.agromarket.agro_server.model.dto.response.NotificationDTO;
 import org.agromarket.agro_server.model.entity.Notification;
 import org.agromarket.agro_server.model.entity.User;
 import org.agromarket.agro_server.repositories.customer.NotificationRepository;
+import org.agromarket.agro_server.repositories.customer.UserRepository;
 import org.agromarket.agro_server.service.customer.NotificationService;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
@@ -18,11 +19,13 @@ public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final UserRepository userRepository;
 
     // Constructor injection cho các dependency
-    public NotificationServiceImpl(NotificationRepository notificationRepository, SimpMessagingTemplate messagingTemplate) {
+    public NotificationServiceImpl(NotificationRepository notificationRepository, SimpMessagingTemplate messagingTemplate, UserRepository userRepository) {
         this.notificationRepository = notificationRepository;
         this.messagingTemplate = messagingTemplate;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -37,6 +40,7 @@ public class NotificationServiceImpl implements NotificationService {
         notificationRepository.save(notification);
         messagingTemplate.convertAndSendToUser(notification.getUser().getUsername(), "/queue/notifications", notification);
     }
+
     @Override
     public List<NotificationDTO> getAllNotificationByUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -47,6 +51,7 @@ public class NotificationServiceImpl implements NotificationService {
                 .map(this::convertToDTO)
                 .toList();
     }
+
     @Override
     public void changeStatus(Long notificationId) {
         Notification notification = notificationRepository.findById(notificationId)
@@ -61,14 +66,23 @@ public class NotificationServiceImpl implements NotificationService {
      */
     @Override
     public void sendBroadcastNotification(String title, String content) {
-        Notification notification = new Notification();
-        notification.setTitle(title);
-        notification.setContent(content);
-        notification.setReadStatus(false);
-        notification.setCreatedDate(LocalDateTime.now());
-        notificationRepository.save(notification);
-        messagingTemplate.convertAndSendToUser(notification.getUser().getUsername(), "/queue/notifications", notification);
+        List<User> users = userRepository.findAll();
+
+        // gửi thông báo cho mỗi người
+        for (User user : users) {
+            Notification notification = new Notification();
+            notification.setTitle(title);
+            notification.setContent(content);
+            notification.setReadStatus(false);
+            notification.setCreatedDate(LocalDateTime.now());
+
+            notification.setUser(user);
+            notificationRepository.save(notification);
+
+            messagingTemplate.convertAndSendToUser(user.getUsername(), "/queue/notifications", notification);
+        }
     }
+
 
     private NotificationDTO convertToDTO(Notification notification) {
         NotificationDTO dto = new NotificationDTO();

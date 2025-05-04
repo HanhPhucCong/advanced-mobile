@@ -96,6 +96,13 @@ const CheckoutScreen = ({ navigation }: any) => {
         fetchProducts();
     }, [selectedLineItems]);
 
+    const getOriginalTotalPrice = () => {
+        return selectedLineItems.reduce((sum, lineItem) => {
+            const product = products.find((p) => p.id === lineItem.productId);
+            return sum + (product ? product.price * lineItem.quantity : 0);
+        }, 0);
+    };
+
     const validateForm = () => {
         let valid = true;
         let newErrors: { shippingAddress?: string; phoneNumber?: string } = {};
@@ -270,7 +277,7 @@ const CheckoutScreen = ({ navigation }: any) => {
                             <View style={styles.couponContainer}>
                                 <Text style={styles.paymentLabel}>Chọn mã giảm giá:</Text>
                                 {coupons
-                                    .filter((coupon) => getTotalPrice() >= coupon.minimumOrderAmount) // lọc trước
+                                    .filter((coupon) => getOriginalTotalPrice() >= coupon.minimumOrderAmount)
                                     .map((coupon) => (
                                         <TouchableOpacity
                                             key={coupon.id}

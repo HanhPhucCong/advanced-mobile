@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { showMessage } from 'react-native-flash-message';
 import { Ionicons } from '@expo/vector-icons';
 import passwordService from '../../../service/api/passwordService';
 
@@ -32,7 +33,11 @@ const ChangePasswordScreen = ({ route }: any) => {
         if (response.success) {
             setOtpSent(true);
             setCountdown(30);
-            Alert.alert('OTP đã được gửi', 'Vui lòng kiểm tra điện thoại');
+            showMessage({
+                message: 'OTP đã được gửi',
+                description: 'Vui lòng kiểm tra email để lấy mã OTP',
+                type: 'success',
+            });
 
             const timer = setInterval(() => {
                 setCountdown((prev) => {
@@ -45,17 +50,29 @@ const ChangePasswordScreen = ({ route }: any) => {
                 });
             }, 1000);
         } else {
-            Alert.alert('Lỗi', response.message);
+            showMessage({
+                message: 'Lỗi',
+                description: response.message,
+                type: 'danger',
+            });
         }
     };
 
     const handleChangePassword = async () => {
         if (!isPasswordValid) {
-            Alert.alert('Lỗi', 'Mật khẩu mới phải có ít nhất 6 ký tự.');
+            showMessage({
+                message: 'Lỗi',
+                description: 'Mật khẩu mới phải có ít nhất 6 ký tự.',
+                type: 'danger',
+            });
             return;
         }
         if (!isConfirmValid) {
-            Alert.alert('Lỗi', 'Mật khẩu xác nhận không khớp.');
+            showMessage({
+                message: 'Lỗi',
+                description: 'Mật khẩu xác nhận không khớp.',
+                type: 'danger',
+            });
             return;
         }
 
@@ -63,10 +80,18 @@ const ChangePasswordScreen = ({ route }: any) => {
         const response = await passwordService.changePassword(userId, confirmPassword, otp);
 
         if (response.success) {
-            Alert.alert('Thành công', 'Mật khẩu đã được thay đổi.');
+            showMessage({
+                message: 'Thành công',
+                description: 'Mật khẩu đã được thay đổi.',
+                type: 'success',
+            });
             navigation.goBack();
         } else {
-            Alert.alert('Lỗi', response.message);
+            showMessage({
+                message: 'Lỗi',
+                description: response.message,
+                type: 'danger',
+            });
         }
     };
 
@@ -146,6 +171,8 @@ const ChangePasswordScreen = ({ route }: any) => {
 };
 
 export default ChangePasswordScreen;
+
+// styles giữ nguyên không thay đổi
 
 const styles = StyleSheet.create({
     container: {
